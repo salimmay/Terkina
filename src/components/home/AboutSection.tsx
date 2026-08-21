@@ -44,26 +44,26 @@ export default function AboutSection() {
   }>({
     badge: { en: 'Who We Are', fr: 'Qui Sommes-Nous', ar: 'من نحن' },
     heading: {
-      en: 'Fusing Visual Artistry With Physical Precision.',
-      fr: 'Fusionner l\'art visuel et la précision physique.',
-      ar: 'ندمج بين الفن البصري والهندسة الدقيقة.',
+      en: 'Two Specialized Visions. One Cinematic Standard.',
+      fr: 'Deux Visions Spécialisées. Une Exigence Cinématographique.',
+      ar: 'رؤيتان إبداعيتان بمعيار سينمائي استثنائي.',
     },
     paragraph1: {
-      en: 'TERKINA is a hybrid multimedia studio operating at the intersection of cinematic photography, high-end videography, and industrial-grade 3D additive manufacturing.',
-      fr: 'TERKINA est un studio multimédia hybride opérant à l\'intersection de la photographie cinématographique et de la fabrication additive 3D.',
-      ar: 'تيركينا هو استوديو وسائط متقدم متخصص في إنتاج المحتوى البصري والحلول الفيزيائية ثلاثية الأبعاد.',
+      en: 'TERKINA operates as a premier visual creative agency uniting two specialized divisions: MED ART, dedicated to luxury wedding cinematography and bespoke bridal storytelling, and TERKINA PRODUCTION, specializing in high-impact commercial advertising, corporate campaigns, and live event coverage.',
+      fr: 'TERKINA est une agence de création visuelle réunissant deux divisions d\'excellence : MED ART, dédiée au cinéma de mariage de luxe et récits nuptiaux sur mesure, et TERKINA PRODUCTION, spécialisée dans la production publicitaire, les campagnes de marque et la couverture d\'événements.',
+      ar: 'تيركينا هي وكالة إنتاج بصري رائدة تجمع بين قسمين متخصصين: "ميد آرت (MED ART)" المخصص لتوثيق حفلات الزفاف الفاخرة والقصص الرومانسية بلمسة سينمائية، و"تيركينا للإنتاج (TERKINA)" المتخصص في الحملات الإعلانية التجارية وتغطية الفعاليات والمؤتمرات الكبرى.',
     },
     paragraph2: {
-      en: 'From editorial architectural shoots to micron-precise custom prototypes, our dual-pipeline infrastructure allows creators to scale visions without medium boundaries.',
-      fr: 'Des prises de vue architecturales éditoriales aux prototypes sur mesure de précision micronique.',
-      ar: 'سواء كنت بحاجة إلى جلسة تصوير معمارية سينمائية أو نموذج أولي مطبوع بدقة ميكرونية، نضمن لك جودة استثنائية.',
+      en: 'Whether capturing the raw emotional beauty of wedding vows or directing high-production commercial sets and festival stages, our multi-camera cinema infrastructure and masterclass color science ensure unforgettable visual masterpieces.',
+      fr: 'De l\'émotion authentique des vœux de mariage aux plateaux de tournage publicitaires et scènes de festivals, nous déployons une technologie cinéma de pointe et une colorimétrie de maître.',
+      ar: 'من توثيق اللحظات العاطفية الصادقة في ليلة العمر إلى إخراج أضخم الحملات الإعلانية وتغطية المهرجانات، نعتمد على أحدث الكاميرات السينمائية وهندسة ألوان احترافية لنصنع لك عملاً بصرياً لا يُنسى.',
     },
   });
 
   const [stats, setStats] = useState({
-    stat1: { val: 500, suffix: '+', label: { en: 'Photo Sets', fr: 'Projets Photo', ar: 'مشروع تصوير' } },
-    stat2: { val: 0.05, suffix: 'mm', label: { en: '3D Tolerance', fr: 'Précision 3D', ar: 'دقة الطباعة' } },
-    stat3: { val: 100, suffix: '%', label: { en: 'Bespoke Craft', fr: 'Sur Mesure', ar: 'حرفية مخصصة' } },
+    stat1: { val: 350, suffix: '+', label: { en: 'Weddings & Films', fr: 'Mariages & Films', ar: 'حفل زفاف وفيلم' } },
+    stat2: { val: 100, suffix: '%', label: { en: 'Cinematic 4K/8K', fr: '4K/8K Cinéma', ar: 'جودة 4K/8K سينمائية' } },
+    stat3: { val: 180, suffix: '+', label: { en: 'Brands & Events', fr: 'Marques & Événements', ar: 'علامة تجارية وفعالية' } },
   });
 
   useEffect(() => {
@@ -89,8 +89,9 @@ export default function AboutSection() {
 
   return (
     <section id="about" className="relative py-24 sm:py-32 px-5 sm:px-8 md:px-16 border-t border-white/10 bg-[#060609] overflow-hidden">
-      {/* Background Ambient Spotlight */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[600px] h-[300px] bg-purple-900/10 blur-[120px] sm:blur-[150px] pointer-events-none" />
+      {/* Background Ambient Spotlight with dual amber & cyan tones */}
+      <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[320px] sm:w-[500px] h-[300px] bg-amber-600/10 blur-[130px] sm:blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-[320px] sm:w-[500px] h-[300px] bg-cyan-600/10 blur-[130px] sm:blur-[160px] pointer-events-none" />
 
       <div className="max-w-6xl mx-auto relative z-10" dir={dir}>
         <motion.div 
@@ -110,7 +111,7 @@ export default function AboutSection() {
             transition={{ duration: 0.6 }}
             className="lg:col-span-6 text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase leading-[1.1] break-words"
           >
-            {getLangText(aboutData.heading, 'Fusing Visual Artistry With Physical Precision.')}
+            {getLangText(aboutData.heading, 'Two Specialized Visions. One Cinematic Standard.')}
           </motion.h3>
 
           <motion.div 
@@ -121,29 +122,29 @@ export default function AboutSection() {
             className="lg:col-span-6 flex flex-col gap-5 sm:gap-6 text-white/70 text-sm sm:text-base md:text-lg font-light leading-relaxed"
           >
             <p>
-              {getLangText(aboutData.paragraph1, 'TERKINA is a hybrid multimedia studio operating at the intersection of cinematic photography, high-end videography, and industrial-grade 3D additive manufacturing.')}
+              {getLangText(aboutData.paragraph1, 'TERKINA operates as a premier visual creative agency uniting two specialized divisions: MED ART, dedicated to luxury wedding cinematography and bespoke bridal storytelling, and TERKINA PRODUCTION, specializing in high-impact commercial advertising, corporate campaigns, and live event coverage.')}
             </p>
             <p className="text-xs sm:text-sm text-white/50">
-              {getLangText(aboutData.paragraph2, 'From editorial architectural shoots to micron-precise custom prototypes, our dual-pipeline infrastructure allows creators to scale visions without medium boundaries.')}
+              {getLangText(aboutData.paragraph2, 'Whether capturing the raw emotional beauty of wedding vows or directing high-production commercial sets and festival stages, our multi-camera cinema infrastructure and masterclass color science ensure unforgettable visual masterpieces.')}
             </p>
             
             {/* Animated Dynamic Counters - Responsive Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 sm:pt-8 border-t border-white/10 mt-2">
               <div className="p-4 rounded-2xl bg-white/[0.02] sm:bg-transparent border sm:border-0 border-white/5">
-                <div className="text-3xl sm:text-4xl font-black text-white font-mono">
+                <div className="text-3xl sm:text-4xl font-black text-amber-300 font-mono">
                   <AnimatedNumber value={stats.stat1.val} suffix={stats.stat1.suffix} />
                 </div>
                 <div className="text-xs font-mono text-white/40 uppercase mt-1">
-                  {getLangText(stats.stat1.label, 'Photo Sets')}
+                  {getLangText(stats.stat1.label, 'Weddings & Films')}
                 </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-white/[0.02] sm:bg-transparent border sm:border-0 border-white/5">
-                <div className="text-3xl sm:text-4xl font-black text-purple-400 font-mono">
+                <div className="text-3xl sm:text-4xl font-black text-cyan-400 font-mono">
                   <AnimatedNumber value={stats.stat2.val} suffix={stats.stat2.suffix} />
                 </div>
                 <div className="text-xs font-mono text-white/40 uppercase mt-1">
-                  {getLangText(stats.stat2.label, '3D Tolerance')}
+                  {getLangText(stats.stat2.label, 'Cinematic 4K/8K')}
                 </div>
               </div>
 
@@ -152,7 +153,7 @@ export default function AboutSection() {
                   <AnimatedNumber value={stats.stat3.val} suffix={stats.stat3.suffix} />
                 </div>
                 <div className="text-xs font-mono text-white/40 uppercase mt-1">
-                  {getLangText(stats.stat3.label, 'Bespoke Craft')}
+                  {getLangText(stats.stat3.label, 'Brands & Events')}
                 </div>
               </div>
             </div>

@@ -25,12 +25,12 @@ const fontArabic = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "TERKINA | Hybrid Studio — Cinematic Photography & 3D Engineering",
-  description: "Precision 3D additive manufacturing, architectural photography, and digital generative artifacts.",
+  title: "TERKINA & MED ART | Luxury Wedding & Commercial Video Production",
+  description: "Bespoke luxury wedding photography by MED ART and high-impact commercial video production, advertising campaigns, and event coverage by TERKINA.",
   metadataBase: new URL("https://terkina.com"),
   openGraph: {
-    title: "TERKINA — Fusing Visual Artistry With Physical Precision",
-    description: "Cinematic Photography & Additive 3D Manufacturing Studio.",
+    title: "TERKINA & MED ART — Luxury Weddings & Commercial Production",
+    description: "Cinematic Wedding Photography & High-Impact Commercial Video Production House.",
     url: "https://terkina.com",
     siteName: "TERKINA",
     images: [
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
         url: "/og-preview.jpg",
         width: 1200,
         height: 630,
-        alt: "TERKINA Studio",
+        alt: "TERKINA & MED ART Studio",
       },
     ],
     locale: "en_US",
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "TERKINA Hybrid Studio",
-    description: "Cinematic Photography & 3D Printing",
+    title: "TERKINA & MED ART",
+    description: "Luxury Weddings & Commercial Production",
     images: ["/og-preview.jpg"],
   },
 };
