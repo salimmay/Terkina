@@ -3,247 +3,107 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Film, X, ChevronLeft, ChevronRight, MapPin, Calendar, Building, Tag, MessageSquare } from 'lucide-react';
+import { Film, MessageSquare } from 'lucide-react';
 import { MOCK_PRODUCTION_PROJECTS, CATEGORIES_PRODUCTION, PhotoProjectItem } from '@/lib/mockData';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { getTranslation } from '@/lib/i18n';
+import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 
 export default function ProductionPage() {
   const { language, dir } = useLanguageStore();
   const t = getTranslation(language);
 
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedProject, setSelectedProject] = useState<PhotoProjectItem | null>(null);
-  const [activeModalImageIndex, setActiveModalImageIndex] = useState(0);
+  const [selectedAlbum, setSelectedAlbum] = useState<AlbumData | null>(null);
 
   // Filtered projects
   const filteredProjects = activeCategory === 'All'
     ? MOCK_PRODUCTION_PROJECTS
     : MOCK_PRODUCTION_PROJECTS.filter((p) => p.category === activeCategory);
 
-  const handleOpenModal = (project: PhotoProjectItem) => {
-    setSelectedProject(project);
-    setActiveModalImageIndex(0);
-  };
-
-  const handleNextImage = () => {
-    if (!selectedProject) return;
-    setActiveModalImageIndex((prev) => (prev + 1) % selectedProject.gallery.length);
-  };
-
-  const handlePrevImage = () => {
-    if (!selectedProject) return;
-    setActiveModalImageIndex((prev) => (prev - 1 + selectedProject.gallery.length) % selectedProject.gallery.length);
-  };
-
-  const handleProductionQuoteInquiry = (projectName: string) => {
-    const text = `Hello TERKINA! I am inquiring about commercial production / event coverage inspired by your project: *${projectName}*. Could we discuss a project brief and quote?`;
-    window.open(`https://wa.me/21612345678?text=${encodeURIComponent(text)}`, '_blank');
+  const handleOpenAlbum = (project: PhotoProjectItem) => {
+    const imagesList = project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
+    setSelectedAlbum({
+      id: project.id,
+      title: project.title,
+      category: project.category,
+      images: imagesList.map((url, idx) => ({
+        id: `${project.id}-${idx}`,
+        url: url,
+        title: `${project.title} — Frame 0${idx + 1}`,
+      })),
+    });
   };
 
   return (
-    <div className="min-h-screen px-4 sm:px-8 py-16 md:py-20 max-w-7xl mx-auto flex flex-col gap-10" dir={dir}>
-      
-      {/* Header Section with Electric Cyan / Cobalt Aesthetic */}
-      <div className="flex flex-col gap-4 text-center md:text-left pt-6 relative">
-        {/* Cyan ambient blur */}
-        <div className="absolute -top-20 -left-20 w-96 h-96 rounded-full bg-cyan-600/15 blur-[140px] pointer-events-none" />
+    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#050508] text-white selection:bg-cyan-400 selection:text-black" dir={dir}>
 
-        <div className="flex items-center justify-center md:justify-start gap-2">
-          <span className="px-3.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold tracking-widest uppercase flex items-center gap-2 shadow-sm">
-            <Film className="w-3.5 h-3.5 text-cyan-400" />
-            {t.productionPage?.badge || 'TERKINA PRODUCTION HOUSE'}
-          </span>
+      {/* Ambient Background Glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl h-[350px] bg-cyan-600/10 blur-[140px] pointer-events-none" />
+
+      {/* ================= PAGE HEADER ================= */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8">
+
+        {/* Category Badge */}
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[10px] sm:text-xs font-mono text-cyan-300 uppercase tracking-widest mb-4">
+          🎬 {t.productionPage?.badge || 'TERKINA PRODUCTION HOUSE'}
         </div>
-        
-        <h1 className="font-heading font-black text-3xl sm:text-5xl lg:text-6xl text-white tracking-tight break-words">
+
+        {/* Title — break-words prevents horizontal overflow */}
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-[1.05] break-words max-w-full">
           {t.productionPage?.title || 'Commercial & Video Production'}
         </h1>
-        
-        <p className="text-white/70 max-w-2xl text-sm sm:text-base md:text-lg font-light leading-relaxed">
+
+        {/* Subtitle */}
+        <p className="mt-3 text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed max-w-xl break-words">
           {t.productionPage?.subtitle || 'High-octane brand campaigns, commercial shoots, corporate conferences, and dynamic event coverage with industry-grade cinema equipment.'}
         </p>
-      </div>
 
-      {/* Dynamic Category Filter Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none max-w-full">
-        {CATEGORIES_PRODUCTION.map((cat) => {
-          const isActive = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className={`relative px-4 sm:px-5 py-2.5 rounded-full text-xs sm:text-sm font-semibold whitespace-nowrap transition-all min-h-[44px] cursor-pointer ${
-                isActive ? 'text-black font-bold' : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-            >
-              {isActive && (
-                <motion.div
-                  layoutId="activeProductionFilterPill"
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-cyan-500 rounded-full z-0 shadow-lg shadow-cyan-500/20"
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
-                />
-              )}
-              <span className="relative z-10">{cat}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Responsive Grid Gallery: 1 col on mobile, 2 on tablet, 3 on desktop */}
-      <motion.div
-        layout
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-      >
-        <AnimatePresence>
-          {filteredProjects.map((project) => (
-            <ProductionPhotoCard
-              key={project.id}
-              project={project}
-              onClick={() => handleOpenModal(project)}
-            />
-          ))}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* Centered Lightbox Modal */}
-      <AnimatePresence>
-        {selectedProject && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-8">
-            {/* Backdrop Blur */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedProject(null)}
-              className="absolute inset-0 bg-black/85 backdrop-blur-2xl"
-            />
-
-            {/* Modal Container */}
-            <motion.div
-              layoutId={`card-prod-${selectedProject.id}`}
-              className="relative w-full max-w-5xl bg-[#090d14] border border-cyan-500/20 rounded-3xl overflow-hidden shadow-2xl z-10 max-h-[90dvh] flex flex-col lg:flex-row"
-            >
-              {/* Close Button */}
+        {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
+        <div className="mt-8 flex items-center gap-2 w-full overflow-x-auto pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
+          {CATEGORIES_PRODUCTION.map((cat) => {
+            const isActive = activeCategory === cat;
+            return (
               <button
-                onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/70 border border-cyan-500/30 text-white flex items-center justify-center hover:bg-black/90 transition-all shadow-lg cursor-pointer"
-                aria-label="Close modal"
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                className={`flex-shrink-0 relative px-4 py-2.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all min-h-[44px] cursor-pointer ${
+                  isActive
+                    ? 'bg-cyan-400 text-black font-bold shadow-lg shadow-cyan-500/20'
+                    : 'bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10'
+                }`}
               >
-                <X className="w-5 h-5" />
+                {cat}
               </button>
+            );
+          })}
+        </div>
+      </div>
 
-              {/* Left Side: Interactive Gallery Slider */}
-              <div className="relative lg:w-3/5 h-64 sm:h-80 lg:h-auto min-h-[260px] sm:min-h-[350px] bg-black flex items-center justify-center overflow-hidden group shrink-0">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeModalImageIndex}
-                    initial={{ opacity: 0, scale: 1.05 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.4 }}
-                    className="relative w-full h-full"
-                  >
-                    <Image
-                      src={selectedProject.gallery[activeModalImageIndex] || selectedProject.coverImage}
-                      alt={selectedProject.title}
-                      fill
-                      className="object-cover"
-                    />
-                  </motion.div>
-                </AnimatePresence>
+      {/* ================= ALBUM GRID ================= */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pb-24">
+        <motion.div
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+        >
+          <AnimatePresence>
+            {filteredProjects.map((project) => (
+              <ProductionPhotoCard
+                key={project.id}
+                project={project}
+                onClick={() => handleOpenAlbum(project)}
+              />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      </div>
 
-                {/* Slider Controls */}
-                {selectedProject.gallery.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrevImage}
-                      className="absolute left-3 min-w-[44px] min-h-[44px] rounded-full bg-black/70 border border-cyan-500/30 text-cyan-200 flex items-center justify-center hover:bg-black/90 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button
-                      onClick={handleNextImage}
-                      className="absolute right-3 min-w-[44px] min-h-[44px] rounded-full bg-black/70 border border-cyan-500/30 text-cyan-200 flex items-center justify-center hover:bg-black/90 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-
-                    {/* Pagination Dots */}
-                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-black/70 px-3 py-1.5 rounded-full border border-cyan-500/20 backdrop-blur-md">
-                      {selectedProject.gallery.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setActiveModalImageIndex(idx)}
-                          className={`min-w-[12px] min-h-[12px] rounded-full transition-all ${
-                            activeModalImageIndex === idx ? 'bg-cyan-400 w-5' : 'bg-white/40'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Right Side: Details Panel */}
-              <div className="lg:w-2/5 p-6 sm:p-8 flex flex-col justify-between gap-6 overflow-y-auto bg-[#090d14] border-t lg:border-t-0 lg:border-l border-cyan-500/15">
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <span className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">
-                      {selectedProject.category}
-                    </span>
-                    <h2 className="font-heading font-bold text-xl sm:text-2xl text-white mt-1">
-                      {selectedProject.title}
-                    </h2>
-                  </div>
-
-                  <p className="text-white/70 text-xs sm:text-sm leading-relaxed font-light">
-                    {selectedProject.description}
-                  </p>
-
-                  {/* Metadata */}
-                  <div className="grid grid-cols-1 gap-2.5 pt-4 border-t border-cyan-500/20 text-xs text-white/60">
-                    <div className="flex items-center gap-2">
-                      <Building className="w-4 h-4 text-cyan-400" />
-                      <span className="font-medium text-white/90">Client / Brand:</span> {selectedProject.client}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-cyan-400" />
-                      <span className="font-medium text-white/90">Date:</span> {selectedProject.date}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-cyan-400" />
-                      <span className="font-medium text-white/90">Location:</span> {selectedProject.location}
-                    </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1.5 pt-3 border-t border-cyan-500/20">
-                    {selectedProject.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2.5 py-1 rounded-md bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-xs flex items-center gap-1"
-                      >
-                        <Tag className="w-3 h-3 text-cyan-400" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Direct Consultation CTA */}
-                <button
-                  onClick={() => handleProductionQuoteInquiry(selectedProject.title)}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-cyan-400 to-cyan-500 hover:from-cyan-300 hover:to-cyan-400 text-black font-bold uppercase text-xs tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-4 min-h-[44px]"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{t.productionPage?.inquireCta || 'Request Production Proposal'}</span>
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      {/* 360° Orbital Roaming Gallery Modal */}
+      <OrbitalGalleryModal
+        album={selectedAlbum}
+        isOpen={!!selectedAlbum}
+        onClose={() => setSelectedAlbum(null)}
+      />
     </div>
   );
 }
@@ -278,7 +138,7 @@ function ProductionPhotoCard({
         setCurrentSlideIndex(0);
       }}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative h-80 sm:h-96 rounded-2xl overflow-hidden cursor-pointer bg-[#070b10] border border-cyan-500/20 hover:border-cyan-400/50 shadow-xl transition-colors duration-300"
+      className="group relative min-w-0 h-80 sm:h-96 rounded-2xl overflow-hidden cursor-pointer bg-[#070b10] border border-cyan-500/20 hover:border-cyan-400/50 shadow-xl transition-colors duration-300"
     >
       {/* Slideshow Container */}
       <div className="relative w-full h-full overflow-hidden">

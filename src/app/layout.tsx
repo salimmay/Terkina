@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Syne, Inter, Cairo } from "next/font/google";
 import ClientShell from "@/components/providers/ClientShell";
+import GoldenCursorTrail from "@/components/GoldenCursorTrail";
 import "./globals.css";
 
 const fontHeading = Syne({
@@ -64,6 +65,8 @@ export default function RootLayout({
       className={`${fontHeading.variable} ${fontBody.variable} ${fontArabic.variable} h-full antialiased dark`}
     >
       <body className="min-h-full flex flex-col bg-[#09090b] text-[#f4f4f5]">
+        {/* Luxurious Gold Light Trail */}
+        <GoldenCursorTrail />
         <ClientShell>{children}</ClientShell>
       </body>
     </html>

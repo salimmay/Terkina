@@ -62,6 +62,8 @@ export function CursorProvider({ children }: { children: React.ReactNode }) {
         animate={{
           width: variant === 'photo' ? 90 : variant === '3d' ? 100 : variant === 'button' ? 56 : 14,
           height: variant === 'photo' ? 90 : variant === '3d' ? 100 : variant === 'button' ? 56 : 14,
+          opacity: variant === 'hidden' ? 0 : 1,
+          scale: variant === 'hidden' ? 0 : 1,
           backgroundColor:
             variant === 'photo'
               ? 'rgba(255, 255, 255, 0.15)'
