@@ -46,15 +46,6 @@ export default function Hero3D() {
 
       {/* Left Column: Technical Headline & CTAs */}
       <div className="w-full lg:w-1/2 flex flex-col items-start gap-6 z-10 my-10" dir={dir}>
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/25 text-xs font-mono text-purple-300 uppercase tracking-widest"
-        >
-          <span className="w-2 h-2 rounded-full bg-purple-400 animate-ping" />
-          {lang === 'ar' ? 'تصنيع إضافي عالي الدقة' : lang === 'fr' ? 'Fabrication Additive & Prototypage Rapide' : 'Additive Manufacturing & Rapid Prototyping'}
-        </motion.div>
-
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -144,9 +135,6 @@ export default function Hero3D() {
           </div>
         )}
 
-        <div className="absolute bottom-4 right-4 z-20 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-mono text-white/60 pointer-events-none">
-          ✦ Interactive WebGL Mesh
-        </div>
       </div>
     </section>
   );

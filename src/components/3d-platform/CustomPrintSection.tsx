@@ -16,9 +16,27 @@ export default function CustomPrintSection() {
     fileUrl: '',
   });
 
-  const handleCustomOrder = (e: React.FormEvent) => {
+  const handleCustomOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 1. Silently backup lead to Supabase (via CRM inbox pipeline)
+    try {
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender_name: formData.name,
+          service: '3D Custom Print',
+          content: `Material: ${formData.materialType} | Details: ${formData.details}`,
+          file_url: formData.fileUrl || null,
+        }),
+      });
+    } catch (err) {
+      // Never block the WhatsApp dispatch on lead-backup failure
+      console.error('Lead silent backup failed', err);
+    }
+
+    // 2. Open WhatsApp dispatch
     const text = `*Custom 3D Print Request* 🛠️⚙️\n\n` +
       `👤 *Client Name:* ${formData.name}\n` +
       `🧵 *Preferred Material:* ${formData.materialType}\n` +
@@ -43,7 +61,7 @@ export default function CustomPrintSection() {
             viewport={{ once: true }}
             className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-300 uppercase tracking-widest mb-4"
           >
-            <span>⚙</span> {lang === 'ar' ? 'خدمة الطباعة والتصنيع حسب الطلب' : lang === 'fr' ? 'Fabrication 3D sur Mesure' : 'Bespoke Fabrication Service'}
+           {lang === 'ar' ? 'خدمة الطباعة والتصنيع حسب الطلب' : lang === 'fr' ? 'Fabrication 3D sur Mesure' : 'Bespoke Fabrication Service'}
           </motion.div>
           
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight break-words">

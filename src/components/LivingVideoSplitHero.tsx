@@ -109,12 +109,7 @@ export default function LivingVideoSplitHero() {
 
           {/* Typography Content */}
           <div className="relative z-20 flex flex-col items-start gap-1.5 sm:gap-3 max-w-lg mb-2 sm:mb-4" dir={dir}>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-500/30 text-[9px] sm:text-[10px] font-mono text-amber-300 uppercase tracking-widest">
-              <span>[01]</span>
-              <span>{lang === 'ar' ? 'تصوير الأعراس الفاخرة' : 'Wedding & Bridal Cinema'}</span>
-            </div>
-
-            <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-2xl">
+           <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-2xl">
               MED ART
             </h2>
 
@@ -178,14 +173,7 @@ export default function LivingVideoSplitHero() {
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/20 z-10" />
             <div className="absolute inset-0 bg-cyan-950/20 mix-blend-color z-10" />
           </motion.div>
-
-          {/* Typography Content */}
           <div className="relative z-20 flex flex-col items-start gap-1.5 sm:gap-3 max-w-lg mb-2 sm:mb-4" dir={dir}>
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full bg-black/60 backdrop-blur-md border border-cyan-500/30 text-[9px] sm:text-[10px] font-mono text-cyan-300 uppercase tracking-widest">
-              <span>[02]</span>
-              <span>{lang === 'ar' ? 'الإنتاج التجاري والفعاليات' : 'Commercial & Event Prod'}</span>
-            </div>
-
             <h2 className="text-3xl sm:text-5xl lg:text-7xl font-black text-white uppercase tracking-tighter leading-none drop-shadow-2xl">
               TERKINA
             </h2>

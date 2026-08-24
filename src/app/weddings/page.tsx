@@ -5,10 +5,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
-import { MOCK_WEDDING_PROJECTS, CATEGORIES_WEDDINGS, PhotoProjectItem } from '@/lib/mockData';
+import { MOCK_WEDDING_PROJECTS, CATEGORIES_WEDDINGS } from '@/lib/mockData';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { getTranslation } from '@/lib/i18n';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
+import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
 
 export default function WeddingsPage() {
   const { language, dir } = useLanguageStore();
@@ -17,12 +18,32 @@ export default function WeddingsPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumData | null>(null);
 
+  // Live Supabase albums (falls back to static mock data if query fails/empty)
+  const { projects: liveProjects, loading, isLive } = usePhotoProjects(
+    'MED_ART',
+    MOCK_WEDDING_PROJECTS.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      coverImage: p.coverImage,
+      gallery: p.gallery,
+    }))
+  );
+
+  // Dynamic category list derived from live data (falls back to static pills)
+  const liveCategories = [...new Set(liveProjects.map((p) => p.category))];
+  const usingLiveCategories = isLive;
+  const availableCategories = usingLiveCategories
+    ? ['All', ...liveCategories]
+    : CATEGORIES_WEDDINGS;
+
   // Filtered projects
   const filteredProjects = activeCategory === 'All'
-    ? MOCK_WEDDING_PROJECTS
-    : MOCK_WEDDING_PROJECTS.filter((p) => p.category === activeCategory);
+    ? liveProjects
+    : liveProjects.filter((p) => p.category === activeCategory);
 
-  const handleOpenAlbum = (project: PhotoProjectItem) => {
+  const handleOpenAlbum = (project: LivePhotoProject) => {
     const imagesList = project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
     setSelectedAlbum({
       id: project.id,
@@ -63,7 +84,7 @@ export default function WeddingsPage() {
         {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
         {/* overflow-x-auto + flex-shrink-0 + whitespace-nowrap stops the page blowing out on mobile */}
         <div className="mt-8 flex items-center gap-2 w-full overflow-x-auto pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
-          {CATEGORIES_WEDDINGS.map((cat) => {
+          {availableCategories.map((cat) => {
             const isActive = activeCategory === cat;
             return (
               <button
@@ -116,7 +137,7 @@ function WeddingPhotoCard({
   project,
   onClick,
 }: {
-  project: PhotoProjectItem;
+  project: LivePhotoProject;
   onClick: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);

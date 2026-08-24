@@ -1,257 +1,300 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag, Eye, X, MessageCircle, Sparkles, Tag, Layers, Check } from 'lucide-react';
-import { Product3D, MOCK_PRODUCTS_DATA } from '@/lib/mockData';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { createClient } from '@/lib/supabase/client';
+import Product3DModal from './Product3DModal';
 
-export default function MarketplaceGrid() {
+export interface Product3D {
+  id: string;
+  title: string;
+  category: string;
+  price: string;
+  show_price: boolean;
+  is_in_stock: boolean;
+  material: string;
+  dimensions: string;
+  imageUrl: string;
+  modelUrl?: string;
+  description: string;
+  specs: {
+    layerHeight: string;
+    printTime: string;
+    weight: string;
+  };
+}
+
+// Static fallback shown only if the live query fails (e.g. network/RLS issue)
+const SAMPLE_PRODUCTS: Product3D[] = [
+  {
+    id: '1',
+    title: 'Aetheric Geometric Table Lamp',
+    category: 'lighting',
+    price: '180 TND',
+    show_price: true,
+    is_in_stock: true,
+    material: 'Matte Bio-PLA & Warm LED Core',
+    dimensions: '18 × 18 × 24 cm',
+    imageUrl:
+      'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1200&auto=format&fit=crop',
+    description:
+      'Ambient parametric desk lamp featuring internal organic shadow casting, diffusive polymer core, and built-in brass touch switch.',
+    specs: { layerHeight: '0.12 mm', printTime: '22 Hours', weight: '520g' },
+  },
+  {
+    id: '2',
+    title: 'Monolithic Headphone & Watch Stand',
+    category: 'accessories',
+    price: '95 TND',
+    show_price: true,
+    is_in_stock: true,
+    material: 'High-Density Composite Carbon PLA',
+    dimensions: '12 × 15 × 28 cm',
+    imageUrl:
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop',
+    description:
+      'Weighted minimalist desk organizer engineered for audiophile over-ear headphones with integrated magnetic cable routing.',
+    specs: { layerHeight: '0.16 mm', printTime: '14 Hours', weight: '680g Solid' },
+  },
+];
+
+interface MarketplaceGridProps {
+  onSelectProduct?: (product: Product3D) => void;
+}
+
+export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProps) {
   const { lang, dir } = useLanguage();
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [activeProduct, setActiveProduct] = useState<Product3D | null>(null);
+  const [products, setProducts] = useState<Product3D[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [internalModalProduct, setInternalModalProduct] = useState<Product3D | null>(null);
 
-  const WHATSAPP_NUMBER = '21612345678'; // Studio Target WhatsApp Number
+  const WHATSAPP_NUMBER = '21612345678';
 
-  const filteredProducts = selectedCategory === 'all'
-    ? MOCK_PRODUCTS_DATA
-    : MOCK_PRODUCTS_DATA.filter((p) => p.category === selectedCategory);
+  useEffect(() => {
+    async function fetchLiveProducts() {
+      setLoading(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('three_d_project')
+        .select('*')
+        .eq('status', 'PUBLISHED')
+        .is('deleted_at', null)
+        .order('sort_order', { ascending: true });
 
-  const handleOrderWhatsApp = (product: Product3D) => {
-    const text = `*Order Inquiry: ${product.title}* 📦\n\n` +
-      `💰 *Price:* ${product.price}\n` +
-      `🧵 *Material:* ${product.material}\n` +
-      `📐 *Dimensions:* ${product.dimensions}\n\n` +
-      `Hello TERKINA Studio! I would like to purchase this 3D product or check delivery availability.`;
+      if (!error && data && data.length > 0) {
+        setProducts(
+          data.map((item: Record<string, unknown>) => {
+            const specs = (item.print_specs || {}) as Record<string, unknown>;
+            return {
+              id: item.id as string,
+              title: item.title as string,
+              category: (specs.category as string) || 'decor',
+              price: (specs.price as string) || 'Custom Quote',
+              show_price: (specs.show_price as boolean) ?? true,
+              is_in_stock: (specs.is_in_stock as boolean) ?? true,
+              material: (specs.material as string) || 'Matte Bio-PLA',
+              dimensions: (specs.dimensions as string) || '18 × 18 × 24 cm',
+              imageUrl: (item.cover_image_url as string) || '/placeholder.jpg',
+              modelUrl: (item.model_file_url as string) || undefined,
+              description: (item.description as string) || '',
+              specs: {
+                layerHeight: (specs.layerHeight as string) || '0.05 mm Micron',
+                printTime: (specs.printTime as string) || '18 Hours',
+                weight: (specs.weight as string) || '450g',
+              },
+            };
+          })
+        );
+      } else {
+        if (error) {
+          console.error('Live inventory fetch failed, showing fallback collection:', error.message);
+          setProducts(SAMPLE_PRODUCTS);
+        } else {
+          // Query succeeded but no published products exist yet
+          setProducts([]);
+        }
+      }
+      setLoading(false);
+    }
+
+    fetchLiveProducts();
+  }, []);
+
+  const handleSelect = (product: Product3D) => {
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    } else {
+      // Fallback for pages that don't host their own <Product3DModal />
+      setInternalModalProduct(product);
+    }
+  };
+
+  const filtered =
+    selectedCategory === 'all'
+      ? products
+      : products.filter((p) => p.category.toLowerCase() === selectedCategory.toLowerCase());
+
+  const handleWhatsAppAction = (e: React.MouseEvent, p: Product3D) => {
+    e.stopPropagation();
+
+    const priceText = p.show_price ? p.price : 'Price on Request';
+    const intent = p.is_in_stock ? 'Order Inquiry' : 'Custom Backorder Inquiry (Out of Stock)';
+
+    const text =
+      `*${intent}: ${p.title}* 📦\n\n` +
+      `💰 *Price:* ${priceText}\n` +
+      `🧵 *Material:* ${p.material}\n` +
+      `📐 *Dimensions:* ${p.dimensions}\n` +
+      `⚡ *Availability:* ${p.is_in_stock ? 'In Stock' : 'Made to Order / Backorder'}\n\n` +
+      `Hello! I would like to inquire about this 3D product.`;
 
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
-    <section id="marketplace" className="py-24 px-6 md:px-16 bg-[#06050a] border-t border-white/10 relative overflow-hidden">
-      {/* Background ambient spotlight */}
-      <div className="absolute top-1/3 right-1/4 w-[600px] h-[350px] bg-purple-900/10 blur-[160px] pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto relative z-10" dir={dir}>
-        
+    <section id="marketplace" className="py-24 px-4 sm:px-8 md:px-16 bg-[#050409]">
+      <div className="max-w-7xl mx-auto" dir={dir}>
         {/* Header & Filter Controls */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 border-b border-white/10 pb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-mono text-purple-300 uppercase tracking-widest mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              {lang === 'ar' ? 'المتجر والمصنوعات الفيزيائية' : lang === 'fr' ? 'Collection & Objets Physiques' : 'Physical Collection & Artifacts'}
-            </div>
+            <span className="text-[11px] font-mono text-purple-400 uppercase tracking-widest block mb-2">
+              ✦ {lang === 'ar' ? 'المتجر والمصنوعات الملموسة' : 'Physical Collection & Artifacts'}
+            </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
-              {lang === 'ar' ? 'منتجات جاهزة للطلب الفوري' : lang === 'fr' ? 'Objets 3D Prêts à Commander' : 'Ready-Made 3D Objects'}
+              {lang === 'ar' ? 'منتجات 3D جاهزة للطلب' : 'Ready-Made 3D Objects'}
             </h2>
-            <p className="text-white/60 text-sm sm:text-base max-w-xl mt-2 font-light">
-              {lang === 'ar'
-                ? 'مصنوعات وتحف ثلاثية الأبعاد مطبوعة بدقة عالية ومجهزة للطلب والشحن المباشر عبر واتساب.'
-                : lang === 'fr'
-                ? 'Objets de design et artefacts imprimés en 3D avec finitions soignées, expédiés directement via WhatsApp.'
-                : 'Curated parametric lamps, weighted desk organizers, and tactile sculptures crafted with industrial 3D additive precision.'}
-            </p>
           </div>
 
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap gap-2">
+          {/* Touch-Scrollable Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none]">
             {[
-              { id: 'all', label: 'All Items', ar: 'الكل', fr: 'Tous' },
-              { id: 'lighting', label: 'Lighting', ar: 'إضاءة', fr: 'Éclairage' },
-              { id: 'accessories', label: 'Desk & Tech', ar: 'إكسسوارات ومكتب', fr: 'Accessoires Bureau' },
-              { id: 'art', label: 'Art & Sculptures', ar: 'تحف وفنون', fr: 'Art & Sculptures' },
-              { id: 'decor', label: 'Home Decor', ar: 'ديكور منزلي', fr: 'Décoration' },
-            ].map((cat) => {
-              const isActive = selectedCategory === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer min-h-[40px] ${
-                    isActive
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
-                      : 'bg-white/5 text-white/60 hover:text-white border border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  {lang === 'ar' ? cat.ar : lang === 'fr' ? cat.fr : cat.label}
-                </button>
-              );
-            })}
+              { id: 'all', label: 'All Items', ar: 'الكل' },
+              { id: 'lighting', label: 'Lighting', ar: 'إضاءة' },
+              { id: 'accessories', label: 'Desk & Tech', ar: 'إكسسوارات' },
+              { id: 'art', label: 'Art & Sculptures', ar: 'تحف وفنون' },
+              { id: 'decor', label: 'Home Decor', ar: 'ديكور' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all cursor-pointer ${
+                  selectedCategory === cat.id
+                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/30'
+                    : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
+                }`}
+              >
+                {lang === 'ar' ? cat.ar : cat.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Products Grid */}
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <AnimatePresence>
-            {filteredProducts.map((product) => (
+        {/* Loading State */}
+        {loading ? (
+          <div className="py-24 text-center text-xs font-mono text-white/40 animate-pulse">
+            Loading live 3D inventory...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
+            <span className="text-2xl block mb-2">🧊</span>
+            <span className="text-xs font-mono text-white/40">
+              No products available in this category.
+            </span>
+          </div>
+        ) : (
+          /* Responsive Product Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filtered.map((product) => (
               <motion.div
                 key={product.id}
                 layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="group flex flex-col justify-between rounded-3xl bg-[#0c0a14] border border-white/10 hover:border-purple-500/40 p-5 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-950/20"
+                onClick={() => handleSelect(product)}
+                className="group flex flex-col justify-between rounded-2xl bg-white/[0.02] border border-white/10 hover:border-purple-500/40 p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-purple-950/20 cursor-pointer min-w-0"
               >
-                {/* Product Thumbnail */}
-                <div 
-                  onClick={() => setActiveProduct(product)}
-                  className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-neutral-950 cursor-pointer border border-white/5"
-                >
-                  <Image
+                {/* Product Image Preview */}
+                <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-950 border border-white/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={product.imageUrl}
                     alt={product.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+                    className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
+                      product.is_in_stock
+                        ? 'brightness-95 group-hover:brightness-100'
+                        : 'brightness-60 grayscale-[40%]'
+                    }`}
+                    loading="lazy"
                   />
 
-                  {/* Gradient Shadow Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+                  {/* Stock Status Badge (Top-Left) */}
+                  {!product.is_in_stock && (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-950/80 backdrop-blur-md border border-rose-500/40 text-[9px] font-mono font-bold text-rose-300 uppercase tracking-wider">
+                      Made to Order
+                    </div>
+                  )}
 
-                  {/* Hover Quick View Pill */}
-                  <div className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
-                    <span className="text-xs font-mono font-bold text-white bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 flex items-center gap-1.5 shadow-xl">
-                      <Eye className="w-3.5 h-3.5 text-purple-400" />
-                      {lang === 'ar' ? 'معاينة سريعة' : 'Quick View'}
-                    </span>
-                  </div>
-
-                  {/* Price Tag Badge */}
-                  <div className="absolute bottom-3 right-3 z-20 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold">
-                    {product.price}
+                  {/* Dynamic Price Badge (Top-Right) */}
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/10 text-xs font-mono font-bold">
+                    {product.show_price ? (
+                      <span className="text-emerald-400">{product.price}</span>
+                    ) : (
+                      <span className="text-white/60 text-[10px] tracking-wider uppercase">
+                        Price on Request
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                {/* Product Details */}
-                <div className="mt-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-mono text-purple-400 uppercase tracking-wider font-semibold">
-                      {product.material}
-                    </span>
-                    <span className="text-[11px] font-mono text-white/40">
-                      {product.dimensions}
-                    </span>
-                  </div>
+                {/* Product Info */}
+                <div className="mt-4 flex flex-col gap-1.5">
+                  <span className="text-[10px] font-mono text-purple-300 uppercase tracking-wider">
+                    {product.material}
+                  </span>
 
                   <h3 className="text-base font-bold text-white group-hover:text-purple-300 transition-colors line-clamp-1">
                     {product.title}
                   </h3>
 
-                  <p className="text-xs text-white/60 font-light line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-white/50 font-light line-clamp-2 leading-relaxed">
                     {product.description}
                   </p>
                 </div>
 
-                {/* Order via WhatsApp Button */}
+                {/* Dynamic WhatsApp CTA Button */}
                 <button
-                  onClick={() => handleOrderWhatsApp(product)}
-                  className="mt-5 w-full py-3 rounded-xl bg-white/5 hover:bg-emerald-500 hover:text-black border border-white/10 hover:border-emerald-400 text-white text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
+                  onClick={(e) => handleWhatsAppAction(e, product)}
+                  className={`mt-4 w-full py-2.5 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    product.is_in_stock
+                      ? 'bg-white/5 hover:bg-emerald-500 hover:text-black border-white/10 hover:border-emerald-400 text-white'
+                      : 'bg-rose-500/10 hover:bg-rose-500 hover:text-white border-rose-500/30 text-rose-300'
+                  }`}
                 >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>{lang === 'ar' ? 'اطلب عبر واتساب فوراً' : 'Order on WhatsApp'}</span>
+                  <span>💬</span>
+                  <span>
+                    {product.is_in_stock
+                      ? lang === 'ar'
+                        ? 'اطلب عبر واتساب'
+                        : 'Order on WhatsApp'
+                      : lang === 'ar'
+                        ? 'طلب تصنيع مخصص ↗'
+                        : 'Request Backorder ↗'}
+                  </span>
                 </button>
               </motion.div>
             ))}
-          </AnimatePresence>
-        </motion.div>
-
-        {/* Quick View Product Modal */}
-        <AnimatePresence>
-          {activeProduct && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-8">
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setActiveProduct(null)}
-                className="absolute inset-0 bg-black/85 backdrop-blur-xl"
-              />
-
-              {/* Modal Card */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.3 }}
-                className="relative w-full max-w-4xl bg-[#0e0c16] border border-purple-500/20 rounded-3xl overflow-hidden shadow-2xl z-10 max-h-[90dvh] flex flex-col md:flex-row"
-              >
-                {/* Close Button */}
-                <button
-                  onClick={() => setActiveProduct(null)}
-                  className="absolute top-4 right-4 z-30 min-w-[44px] min-h-[44px] rounded-full bg-black/70 border border-white/20 text-white flex items-center justify-center hover:bg-black/90 transition-all shadow-lg cursor-pointer"
-                  aria-label="Close modal"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-
-                {/* Left Side: Photo */}
-                <div className="relative md:w-1/2 h-64 sm:h-80 md:h-auto min-h-[280px] bg-black">
-                  <Image
-                    src={activeProduct.imageUrl}
-                    alt={activeProduct.title}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-black/70 backdrop-blur-md border border-purple-500/30 text-purple-300 text-xs font-mono">
-                    PHYSICAL OBJECT
-                  </div>
-                </div>
-
-                {/* Right Side: Details & Action */}
-                <div className="md:w-1/2 p-6 sm:p-8 flex flex-col justify-between gap-6 overflow-y-auto bg-[#0e0c16] border-t md:border-t-0 md:border-l border-white/10">
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-semibold text-purple-400 uppercase tracking-widest">
-                        {activeProduct.category}
-                      </span>
-                      <span className="text-lg font-mono font-bold text-emerald-400">
-                        {activeProduct.price}
-                      </span>
-                    </div>
-
-                    <h2 className="font-heading font-bold text-xl sm:text-2xl text-white">
-                      {activeProduct.title}
-                    </h2>
-
-                    <p className="text-white/70 text-xs sm:text-sm leading-relaxed font-light">
-                      {activeProduct.description}
-                    </p>
-
-                    {/* Specs List */}
-                    <div className="grid grid-cols-1 gap-2.5 pt-3 border-t border-white/10 text-xs text-white/70">
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
-                        <span className="text-white/40">Material:</span>
-                        <span className="font-mono text-white font-medium">{activeProduct.material}</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
-                        <span className="text-white/40">Dimensions:</span>
-                        <span className="font-mono text-white font-medium">{activeProduct.dimensions}</span>
-                      </div>
-                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-white/[0.02] border border-white/5">
-                        <span className="text-white/40">Availability:</span>
-                        <span className="font-mono text-emerald-400 font-medium flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" /> In Stock / Made to Order
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Button */}
-                  <button
-                    onClick={() => handleOrderWhatsApp(activeProduct)}
-                    className="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-xs tracking-wider transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer min-h-[44px]"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>{lang === 'ar' ? 'اطلب الآن عبر واتساب' : 'Dispatch Order via WhatsApp'}</span>
-                  </button>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
+          </div>
+        )}
       </div>
+
+      {/* Built-in modal fallback when no external handler is provided */}
+      {!onSelectProduct && (
+        <Product3DModal
+          product={internalModalProduct}
+          isOpen={!!internalModalProduct}
+          onClose={() => setInternalModalProduct(null)}
+        />
+      )}
     </section>
   );
 }

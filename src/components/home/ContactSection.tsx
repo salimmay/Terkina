@@ -15,13 +15,11 @@ export default function ContactSection() {
   
   // Dynamic Contact Form Copy & Settings
   const [contactSection, setContactSection] = useState<{
-    badge?: MultilingualField;
     heading?: MultilingualField;
     name_placeholder?: MultilingualField;
     message_placeholder?: MultilingualField;
     button_text?: MultilingualField;
   }>({
-    badge: { en: 'Direct Inquiry & Booking', fr: 'Réservation & Contact Direct', ar: 'حجز واستفسار مباشر عبر واتساب' },
     heading: { en: "Let's Create Cinematic History", fr: "Créons Ensemble un Chef-d'Œuvre", ar: 'دعنا نصنع عملاً بصرياً لا يُنسى' },
     name_placeholder: { en: 'e.g. Alexander & Sophia / Brand Name', fr: 'ex. Alexandre & Sophie / Nom de Marque', ar: 'مثال: أحمد وسارة / اسم الشركة' },
     message_placeholder: {
@@ -119,16 +117,6 @@ export default function ContactSection() {
 
       <div className="max-w-3xl mx-auto relative z-10" dir={dir}>
         <div className="text-center mb-8 sm:mb-12">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-mono text-emerald-400 uppercase tracking-widest mb-4"
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            {getLangText(contactSection.badge, lang === 'ar' ? 'حجز واستفسار مباشر عبر واتساب' : 'Direct Inquiry & Booking')}
-          </motion.div>
-
           <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase break-words">
             {getLangText(contactSection.heading, "Let's Create Cinematic History")}
           </h3>
@@ -141,7 +129,6 @@ export default function ContactSection() {
           onSubmit={handleWhatsAppSend} 
           className="flex flex-col gap-5 sm:gap-6 p-5 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur-xl shadow-2xl"
         >
-          {/* Service Selector Chips - 1 col on mobile, 3 col on sm+ */}
           <div>
             <label className="block text-xs font-mono text-white/50 uppercase mb-3">
               {lang === 'ar' ? 'الخدمة المطلوبة' : lang === 'fr' ? 'Type de Service' : 'Select Service Type'}

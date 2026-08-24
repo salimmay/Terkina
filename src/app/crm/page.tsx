@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Camera, Box, ShoppingBag, Plus, CheckCircle, Clock, Archive, Sparkles, Filter, Layers, Film } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_WEDDING_PROJECTS, MOCK_PRODUCTION_PROJECTS, MOCK_3D_PROJECTS, MOCK_PRODUCTS_DATA } from '@/lib/mockData';
+import StatusDropdown from '@/components/admin/StatusDropdown';
 
 type PlatformTab = 'ALL' | 'VISUAL_MEDIA' | 'THREE_D' | 'PRODUCTS';
 
@@ -20,6 +21,8 @@ interface UnifiedTableItem {
   meta: string;
   sortOrder: number;
   editHref: string;
+  /** Supabase table backing this record — null = mock-only (no live status updates) */
+  dbTable: 'photo_project' | 'three_d_project' | null;
 }
 
 export default function CrmDashboardPage() {
@@ -38,6 +41,7 @@ export default function CrmDashboardPage() {
       meta: `${p.client} • ${p.location}`,
       sortOrder: idx + 1,
       editHref: '/crm/photography',
+      dbTable: 'photo_project' as const,
     })),
     ...MOCK_PRODUCTION_PROJECTS.map((p, idx) => ({
       id: p.id,
@@ -50,6 +54,7 @@ export default function CrmDashboardPage() {
       meta: `${p.client} • ${p.location}`,
       sortOrder: MOCK_WEDDING_PROJECTS.length + idx + 1,
       editHref: '/crm/photography',
+      dbTable: 'photo_project' as const,
     })),
   ];
 
@@ -64,6 +69,7 @@ export default function CrmDashboardPage() {
     meta: `${p.specs.material} • ${p.specs.layerHeight}`,
     sortOrder: idx + 1,
     editHref: '/crm/3d',
+    dbTable: 'three_d_project',
   }));
 
   const productItems: UnifiedTableItem[] = MOCK_PRODUCTS_DATA.map((p, idx) => ({
@@ -77,6 +83,7 @@ export default function CrmDashboardPage() {
     meta: `${p.material} • ${p.dimensions}`,
     sortOrder: idx + 1,
     editHref: '/crm/products',
+    dbTable: null, // Marketplace items are still served from local mock data
   }));
 
   const allItems = [...visualMediaItems, ...threeDItems, ...productItems];
@@ -96,9 +103,6 @@ export default function CrmDashboardPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-md bg-purple-500/10 text-purple-400 border border-purple-500/20 text-[10px] font-mono uppercase font-bold tracking-wider">
-              Unified Studio CRM
-            </span>
           </div>
           <h1 className="font-heading font-black text-3xl sm:text-4xl text-white tracking-tight">
             Master Studio Control
@@ -323,7 +327,15 @@ export default function CrmDashboardPage() {
                     {project.category}
                   </td>
                   <td className="py-4 px-4">
-                    <StatusBadge status={project.status} />
+                    {project.dbTable ? (
+                      <StatusDropdown
+                        projectId={project.id}
+                        initialStatus={project.status}
+                        tableName={project.dbTable}
+                      />
+                    ) : (
+                      <StatusBadge status={project.status} />
+                    )}
                   </td>
                   <td className="py-4 px-4 text-xs font-mono text-zinc-400">#{project.sortOrder}</td>
                   <td className="py-4 px-6 text-right">

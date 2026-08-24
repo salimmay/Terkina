@@ -262,10 +262,7 @@ export default function Navbar() {
               transition={{ delay: 0.4 }}
               className="relative z-10 pt-6 border-t border-white/10 flex flex-col gap-4"
             >
-              <div className="flex items-center justify-between text-xs font-mono text-white/50">
-                <span>📍 Tunis, Tunisia</span>
-                <span className="text-emerald-400">● Available Worldwide</span>
-              </div>
+
 
               <a
                 href="https://wa.me/21612345678"

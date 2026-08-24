@@ -1,0 +1,25 @@
+-- ============================================================================
+-- Product flags for the 3D Marketplace (show_price / is_in_stock)
+--
+-- OPTION A (recommended — no migration needed):
+--   The admin products table stores these flags inside the existing
+--   `print_specs` JSONB column on `three_d_project`:
+--     print_specs = { ..., "show_price": true, "is_in_stock": true }
+--   No SQL changes required; skip this file.
+--
+-- OPTION B (dedicated columns): uncomment below and run in the Supabase
+-- SQL Editor, then update src/app/admin/products/page.tsx to write to
+-- the columns directly instead of the JSONB patch helper.
+-- ============================================================================
+
+-- ALTER TABLE three_d_project
+--     ADD COLUMN IF NOT EXISTS show_price BOOLEAN NOT NULL DEFAULT TRUE,
+--     ADD COLUMN IF NOT EXISTS is_in_stock BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Backfill existing rows from print_specs if present:
+-- UPDATE three_d_project
+-- SET
+--     show_price  = COALESCE((print_specs ->> 'show_price')::BOOLEAN, TRUE),
+--     is_in_stock = COALESCE((print_specs ->> 'is_in_stock')::BOOLEAN, TRUE)
+-- WHERE show_price IS NULL
+--    OR is_in_stock IS NULL;

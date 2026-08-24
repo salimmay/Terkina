@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Film, MessageSquare } from 'lucide-react';
-import { MOCK_PRODUCTION_PROJECTS, CATEGORIES_PRODUCTION, PhotoProjectItem } from '@/lib/mockData';
+import { MOCK_PRODUCTION_PROJECTS, CATEGORIES_PRODUCTION } from '@/lib/mockData';
 import { useLanguageStore } from '@/store/useLanguageStore';
 import { getTranslation } from '@/lib/i18n';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
+import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
 
 export default function ProductionPage() {
   const { language, dir } = useLanguageStore();
@@ -16,12 +17,29 @@ export default function ProductionPage() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumData | null>(null);
 
+  // Live Supabase albums (falls back to static mock data if query fails/empty)
+  const { projects: liveProjects, loading, isLive } = usePhotoProjects(
+    'TERKINA_PROD',
+    MOCK_PRODUCTION_PROJECTS.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      coverImage: p.coverImage,
+      gallery: p.gallery,
+    }))
+  );
+
+  // Dynamic category list derived from live data (falls back to static pills)
+  const liveCategories = [...new Set(liveProjects.map((p) => p.category))];
+  const availableCategories = isLive ? ['All', ...liveCategories] : CATEGORIES_PRODUCTION;
+
   // Filtered projects
   const filteredProjects = activeCategory === 'All'
-    ? MOCK_PRODUCTION_PROJECTS
-    : MOCK_PRODUCTION_PROJECTS.filter((p) => p.category === activeCategory);
+    ? liveProjects
+    : liveProjects.filter((p) => p.category === activeCategory);
 
-  const handleOpenAlbum = (project: PhotoProjectItem) => {
+  const handleOpenAlbum = (project: LivePhotoProject) => {
     const imagesList = project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
     setSelectedAlbum({
       id: project.id,
@@ -61,7 +79,7 @@ export default function ProductionPage() {
 
         {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
         <div className="mt-8 flex items-center gap-2 w-full overflow-x-auto pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
-          {CATEGORIES_PRODUCTION.map((cat) => {
+          {availableCategories.map((cat) => {
             const isActive = activeCategory === cat;
             return (
               <button
@@ -113,7 +131,7 @@ function ProductionPhotoCard({
   project,
   onClick,
 }: {
-  project: PhotoProjectItem;
+  project: LivePhotoProject;
   onClick: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);

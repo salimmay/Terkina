@@ -1,441 +1,255 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
-type LanguageMap = { en: string; fr: string; ar: string };
+/**
+ * Live site settings editor.
+ * Requires supabase/add_crm_extras.sql (creates the `site_content` table).
+ */
+interface StatsContent {
+  photoSets: number;
+  photoSuffix: string;
+  tolerance: number;
+  toleranceSuffix: string;
+  bespokeCraft: number;
+  craftSuffix: string;
+}
 
-export default function AdminContentManager() {
-  const [activeTab, setActiveTab] = useState<'hero' | 'about' | 'contact' | 'general'>('hero');
+export default function AdminContentPage() {
+  const [activeTab, setActiveTab] = useState<'general' | 'metrics'>('general');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const supabase = createClient();
 
-  // 1. Hero Section State
-  const [heroPhoto, setHeroPhoto] = useState<{
-    badge: LanguageMap;
-    title: LanguageMap;
-    subtitle: LanguageMap;
-    button_text: LanguageMap;
-  }>({
-    badge: { en: 'Studio & Gallery', fr: 'Studio & Galerie', ar: 'الاستوديو والمعرض' },
-    title: { en: 'Photography', fr: 'Photographie', ar: 'التصوير' },
-    subtitle: {
-      en: 'Capturing light, emotion, and architectural mastery through cinematic lenses.',
-      fr: 'Capturer la lumière, l\'émotion et la maîtrise architecturale.',
-      ar: 'التقاط الضوء والعاطفة والإتقان المعماري من خلال عدسات سينمائية.',
-    },
-    button_text: { en: 'Explore Portfolio', fr: 'Explorer la Galerie', ar: 'استكشف المعرض' },
+  // Settings State
+  const [whatsappNumber, setWhatsappNumber] = useState('21612345678');
+  const [agencyEmail, setAgencyEmail] = useState('contact@terkina.com');
+
+  const [stats, setStats] = useState<StatsContent>({
+    photoSets: 500,
+    photoSuffix: '+',
+    tolerance: 0.05,
+    toleranceSuffix: 'mm',
+    bespokeCraft: 100,
+    craftSuffix: '%',
   });
 
-  const [heroThreeD, setHeroThreeD] = useState<{
-    badge: LanguageMap;
-    title: LanguageMap;
-    subtitle: LanguageMap;
-    button_text: LanguageMap;
-  }>({
-    badge: { en: 'Interactive Canvas', fr: 'Espace Interactif', ar: 'مساحة ثلاثية الأبعاد' },
-    title: { en: '3D Printing', fr: 'Impression 3D', ar: 'الطباعة 3D' },
-    subtitle: {
-      en: 'Precision 3D modeling, rapid prototyping, and generative physical artifacts.',
-      fr: 'Modélisation 3D de précision, prototypage rapide et artefacts physiques.',
-      ar: 'نمذجة ثلاثية الأبعاد دقيقة، نماذج أولية، وأعمال فنية رقمية مولّدة.',
-    },
-    button_text: { en: 'Launch 3D World', fr: 'Lancer le Monde 3D', ar: 'انطلق للعالم 3D' },
-  });
-
-  // 2. About Section State
-  const [aboutSection, setAboutSection] = useState<{
-    badge: LanguageMap;
-    heading: LanguageMap;
-    paragraph1: LanguageMap;
-    paragraph2: LanguageMap;
-  }>({
-    badge: { en: 'Who We Are', fr: 'Qui Sommes-Nous', ar: 'من نحن' },
-    heading: {
-      en: 'Fusing Visual Artistry With Physical Precision.',
-      fr: 'Fusionner l\'art visuel et la précision physique.',
-      ar: 'ندمج بين الفن البصري والهندسة الدقيقة.',
-    },
-    paragraph1: {
-      en: 'TERKINA is a hybrid multimedia studio operating at the intersection of cinematic photography, high-end videography, and industrial-grade 3D additive manufacturing.',
-      fr: 'TERKINA est un studio multimédia hybride opérant à l\'intersection de la photographie cinématographique et de la fabrication additive 3D.',
-      ar: 'تيركينا هو استوديو وسائط متقدم متخصص في إنتاج المحتوى البصري والحلول الفيزيائية ثلاثية الأبعاد.',
-    },
-    paragraph2: {
-      en: 'From editorial architectural shoots to micron-precise custom prototypes, our dual-pipeline infrastructure allows creators to scale visions without medium boundaries.',
-      fr: 'Des prises de vue architecturales éditoriales aux prototypes sur mesure de précision micronique.',
-      ar: 'سواء كنت بحاجة إلى جلسة تصوير معمارية سينمائية أو نموذج أولي مطبوع بدقة ميكرونية، نضمن لك جودة استثنائية.',
-    },
-  });
-
-  const [statsData, setStatsData] = useState({
-    stat1: { val: 500, suffix: '+', label: { en: 'Photo Sets', fr: 'Projets Photo', ar: 'مشروع تصوير' } },
-    stat2: { val: 0.05, suffix: 'mm', label: { en: '3D Tolerance', fr: 'Précision 3D', ar: 'دقة الطباعة' } },
-    stat3: { val: 100, suffix: '%', label: { en: 'Bespoke Craft', fr: 'Sur Mesure', ar: 'حرفية مخصصة' } },
-  });
-
-  // 3. Contact Form State
-  const [contactSection, setContactSection] = useState<{
-    badge: LanguageMap;
-    heading: LanguageMap;
-    name_placeholder: LanguageMap;
-    message_placeholder: LanguageMap;
-    button_text: LanguageMap;
-    chip_photo: LanguageMap;
-    chip_3d: LanguageMap;
-    chip_custom: LanguageMap;
-  }>({
-    badge: { en: 'Instant WhatsApp Dispatch', fr: 'Dispatch WhatsApp Instantané', ar: 'دردشة مباشرة عبر واتساب' },
-    heading: { en: "Let's Build Something Iconic", fr: "Construisons Quelque Chose d'Iconique", ar: 'دعنا نصنع شيئاً استثنائياً' },
-    name_placeholder: { en: 'e.g. Alex Morgan', fr: 'ex. Jean Dupont', ar: 'مثال: أحمد كريم' },
-    message_placeholder: {
-      en: 'Tell us about your timeline, dimensions, or shoot ideas...',
-      fr: 'Parlez-nous de vos besoins, délais ou idées...',
-      ar: 'أخبرنا عن فكرتك، الموعد النهائي، أو المواصفات...',
-    },
-    button_text: { en: 'Start WhatsApp Chat', fr: 'Lancer le Chat WhatsApp', ar: 'تواصل عبر واتساب فوراً' },
-    chip_photo: { en: '📸 Photography', fr: '📸 Photographie', ar: '📸 تصوير' },
-    chip_3d: { en: '🧊 3D Printing', fr: '🧊 Impression 3D', ar: '🧊 طباعة 3D' },
-    chip_custom: { en: '⚡ Both / Custom', fr: '⚡ Sur Mesure', ar: '⚡ مشروع مشترك' },
-  });
-
-  // 4. General Settings State
-  const [generalSettings, setGeneralSettings] = useState({
-    whatsapp_number: '21612345678',
-    contact_email: 'contact@terkina.com',
-  });
-
-  // Load existing content on mount
   useEffect(() => {
-    fetch('/api/content')
-      .then((r) => r.json())
-      .then((items) => {
-        if (Array.isArray(items)) {
-          items.forEach((item) => {
-            if (item.key === 'photo_side' && item.content) setHeroPhoto(item.content);
-            if (item.key === '3d_side' && item.content) setHeroThreeD(item.content);
-            if (item.key === 'about_section' && item.content) setAboutSection(item.content);
-            if (item.key === 'stats' && item.content) setStatsData(item.content);
-            if (item.key === 'contact_section' && item.content) setContactSection(item.content);
-            if (item.key === 'contact_settings' && item.content) setGeneralSettings(item.content);
-          });
-        }
-      })
-      .catch((e) => console.error('Failed to load content', e));
+    async function loadSettings() {
+      const { data } = await supabase.from('site_content').select('*');
+      if (data) {
+        data.forEach((row: { key: string; content: Record<string, unknown> }) => {
+          if (row.key === 'contact_settings') {
+            if (row.content?.whatsapp_number) setWhatsappNumber(row.content.whatsapp_number as string);
+            if (row.content?.contact_email) setAgencyEmail(row.content.contact_email as string);
+          }
+          if (row.key === 'stats') {
+            setStats(row.content as unknown as StatsContent);
+          }
+        });
+      }
+    }
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const saveContent = async (key: string, content: unknown) => {
+  const handleSave = async (key: string, section: string, content: Record<string, unknown>) => {
     setSaving(true);
     setSaved(false);
+
     try {
-      await fetch('/api/content', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key, content }),
-      });
+      const { error } = await supabase
+        .from('site_content')
+        .upsert({ key, section, content, updated_at: new Date().toISOString() });
+
+      if (error) throw error;
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      const e = err as { message?: string };
+      alert(`Save failed: ${e.message || 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
   };
 
-  const renderLangGroup = (
-    label: string,
-    stateObj: LanguageMap,
-    onChange: (newMap: LanguageMap) => void,
-    isTextArea: boolean = false
-  ) => (
-    <div className="space-y-2">
-      <label className="block text-xs font-mono text-white/70 font-semibold uppercase">{label}</label>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div>
-          <span className="text-[10px] font-mono text-white/40 block mb-1">ENGLISH (EN)</span>
-          {isTextArea ? (
-            <textarea
-              rows={2}
-              value={stateObj?.en || ''}
-              onChange={(e) => onChange({ ...stateObj, en: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white resize-none"
-            />
-          ) : (
-            <input
-              type="text"
-              value={stateObj?.en || ''}
-              onChange={(e) => onChange({ ...stateObj, en: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white"
-            />
-          )}
-        </div>
-        <div>
-          <span className="text-[10px] font-mono text-white/40 block mb-1">FRENCH (FR)</span>
-          {isTextArea ? (
-            <textarea
-              rows={2}
-              value={stateObj?.fr || ''}
-              onChange={(e) => onChange({ ...stateObj, fr: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white resize-none"
-            />
-          ) : (
-            <input
-              type="text"
-              value={stateObj?.fr || ''}
-              onChange={(e) => onChange({ ...stateObj, fr: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white"
-            />
-          )}
-        </div>
-        <div>
-          <span className="text-[10px] font-mono text-white/40 block mb-1">ARABIC (AR)</span>
-          {isTextArea ? (
-            <textarea
-              rows={2}
-              dir="rtl"
-              value={stateObj?.ar || ''}
-              onChange={(e) => onChange({ ...stateObj, ar: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white resize-none"
-            />
-          ) : (
-            <input
-              type="text"
-              dir="rtl"
-              value={stateObj?.ar || ''}
-              onChange={(e) => onChange({ ...stateObj, ar: e.target.value })}
-              className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-xs text-white"
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto text-white pb-20">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-white/10">
+    <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8 text-white">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-6 border-b border-white/10">
         <div>
-          <h1 className="text-2xl font-black uppercase tracking-wider">Universal Site Content Manager</h1>
-          <p className="text-xs text-white/50 font-mono mt-1">
-            Modify 100% of public website copy, badges, titles, descriptions, buttons, placeholders, and metrics.
+          <h1 className="text-2xl font-black uppercase tracking-wider">
+            Site Settings & Dynamic Content
+          </h1>
+          <p className="text-xs font-mono text-white/50 mt-1">
+            Update your primary WhatsApp number, live counter metrics, and site configuration.
           </p>
         </div>
+
         {saved && (
-          <span className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono w-fit">
-            ✓ Changes Saved Live
+          <span className="px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-mono">
+            ✓ Updated Live
           </span>
         )}
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex gap-2 mb-8 bg-white/5 p-1.5 rounded-xl w-fit border border-white/10 overflow-x-auto">
-        {(['hero', 'about', 'contact', 'general'] as const).map((tab) => (
+      {/* Tabs */}
+      <div className="flex gap-2 bg-white/5 p-1 rounded-xl w-fit border border-white/10 text-xs font-mono">
+        {[
+          { id: 'general', label: '⚡ WhatsApp & Channels' },
+          { id: 'metrics', label: '📊 Animated Metrics' },
+        ].map((tab) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-              activeTab === tab ? 'bg-white text-black shadow-md' : 'text-white/60 hover:text-white'
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as 'general' | 'metrics')}
+            className={`px-4 py-2 rounded-lg font-bold uppercase transition-all cursor-pointer ${
+              activeTab === tab.id ? 'bg-white text-black shadow-md' : 'text-white/60 hover:text-white'
             }`}
           >
-            {tab === 'hero' ? 'Hero Split' : tab === 'about' ? 'About & Metrics' : tab === 'contact' ? 'Contact Form' : 'General & WhatsApp'}
+            {tab.label}
           </button>
         ))}
       </div>
 
-      {/* ---------------- TAB 1: HERO SECTION ---------------- */}
-      {activeTab === 'hero' && (
-        <div className="space-y-8 bg-white/[0.02] border border-white/10 rounded-2xl p-6">
-          {/* Photography Side */}
-          <div className="space-y-6">
-            <h2 className="text-sm font-mono uppercase text-blue-400 font-bold border-b border-blue-500/20 pb-2">
-              📷 Left Panel: Photography Copy
-            </h2>
-            {renderLangGroup('Badge Pill Text', heroPhoto.badge, (badge) => setHeroPhoto({ ...heroPhoto, badge }))}
-            {renderLangGroup('Main Title', heroPhoto.title, (title) => setHeroPhoto({ ...heroPhoto, title }))}
-            {renderLangGroup('Subtitle Description', heroPhoto.subtitle, (subtitle) => setHeroPhoto({ ...heroPhoto, subtitle }), true)}
-            {renderLangGroup('CTA Button Text', heroPhoto.button_text, (button_text) => setHeroPhoto({ ...heroPhoto, button_text }))}
-          </div>
-
-          {/* 3D Printing Side */}
-          <div className="space-y-6 pt-6 border-t border-white/10">
-            <h2 className="text-sm font-mono uppercase text-purple-400 font-bold border-b border-purple-500/20 pb-2">
-              ⬡ Right Panel: 3D Printing Copy
-            </h2>
-            {renderLangGroup('Badge Pill Text', heroThreeD.badge, (badge) => setHeroThreeD({ ...heroThreeD, badge }))}
-            {renderLangGroup('Main Title', heroThreeD.title, (title) => setHeroThreeD({ ...heroThreeD, title }))}
-            {renderLangGroup('Subtitle Description', heroThreeD.subtitle, (subtitle) => setHeroThreeD({ ...heroThreeD, subtitle }), true)}
-            {renderLangGroup('CTA Button Text', heroThreeD.button_text, (button_text) => setHeroThreeD({ ...heroThreeD, button_text }))}
-          </div>
-
-          <button
-            onClick={() => {
-              saveContent('photo_side', heroPhoto);
-              saveContent('3d_side', heroThreeD);
-            }}
-            disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 font-bold text-xs uppercase tracking-wider cursor-pointer"
-          >
-            {saving ? 'Saving...' : 'Save Hero Copy'}
-          </button>
-        </div>
-      )}
-
-      {/* ---------------- TAB 2: ABOUT & METRICS ---------------- */}
-      {activeTab === 'about' && (
-        <div className="space-y-8 bg-white/[0.02] border border-white/10 rounded-2xl p-6">
-          <div className="space-y-6">
-            <h2 className="text-sm font-mono uppercase text-purple-400 font-bold border-b border-purple-500/20 pb-2">
-              Studio Manifesto & Descriptions
-            </h2>
-            {renderLangGroup('Badge Text', aboutSection.badge, (badge) => setAboutSection({ ...aboutSection, badge }))}
-            {renderLangGroup('Main Headline', aboutSection.heading, (heading) => setAboutSection({ ...aboutSection, heading }))}
-            {renderLangGroup('Primary Paragraph Description', aboutSection.paragraph1, (paragraph1) => setAboutSection({ ...aboutSection, paragraph1 }), true)}
-            {renderLangGroup('Secondary Paragraph Description', aboutSection.paragraph2, (paragraph2) => setAboutSection({ ...aboutSection, paragraph2 }), true)}
-          </div>
-
-          <div className="space-y-4 pt-6 border-t border-white/10">
-            <h2 className="text-sm font-mono uppercase text-purple-400 font-bold">Live Counters & Metrics</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Stat 1 */}
-              <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
-                <span className="text-xs font-mono text-white/40">Stat 1 Value & Suffix</span>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={statsData.stat1.val}
-                    onChange={(e) => setStatsData({ ...statsData, stat1: { ...statsData.stat1, val: Number(e.target.value) } })}
-                    className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
-                  />
-                  <input
-                    type="text"
-                    value={statsData.stat1.suffix}
-                    onChange={(e) => setStatsData({ ...statsData, stat1: { ...statsData.stat1, suffix: e.target.value } })}
-                    className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
-                  />
-                </div>
-                {renderLangGroup('Stat 1 Label', statsData.stat1.label, (label) => setStatsData({ ...statsData, stat1: { ...statsData.stat1, label } }))}
-              </div>
-
-              {/* Stat 2 */}
-              <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
-                <span className="text-xs font-mono text-white/40">Stat 2 Value & Suffix</span>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={statsData.stat2.val}
-                    onChange={(e) => setStatsData({ ...statsData, stat2: { ...statsData.stat2, val: Number(e.target.value) } })}
-                    className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
-                  />
-                  <input
-                    type="text"
-                    value={statsData.stat2.suffix}
-                    onChange={(e) => setStatsData({ ...statsData, stat2: { ...statsData.stat2, suffix: e.target.value } })}
-                    className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
-                  />
-                </div>
-                {renderLangGroup('Stat 2 Label', statsData.stat2.label, (label) => setStatsData({ ...statsData, stat2: { ...statsData.stat2, label } }))}
-              </div>
-
-              {/* Stat 3 */}
-              <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
-                <span className="text-xs font-mono text-white/40">Stat 3 Value & Suffix</span>
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={statsData.stat3.val}
-                    onChange={(e) => setStatsData({ ...statsData, stat3: { ...statsData.stat3, val: Number(e.target.value) } })}
-                    className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
-                  />
-                  <input
-                    type="text"
-                    value={statsData.stat3.suffix}
-                    onChange={(e) => setStatsData({ ...statsData, stat3: { ...statsData.stat3, suffix: e.target.value } })}
-                    className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
-                  />
-                </div>
-                {renderLangGroup('Stat 3 Label', statsData.stat3.label, (label) => setStatsData({ ...statsData, stat3: { ...statsData.stat3, label } }))}
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => {
-              saveContent('about_section', aboutSection);
-              saveContent('stats', statsData);
-            }}
-            disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 font-bold text-xs uppercase tracking-wider cursor-pointer"
-          >
-            {saving ? 'Saving...' : 'Save About & Stats'}
-          </button>
-        </div>
-      )}
-
-      {/* ---------------- TAB 3: CONTACT FORM ---------------- */}
-      {activeTab === 'contact' && (
-        <div className="space-y-6 bg-white/[0.02] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-sm font-mono uppercase text-emerald-400 font-bold border-b border-emerald-500/20 pb-2">
-            Contact Form Titles, Placeholders & Buttons
-          </h2>
-          {renderLangGroup('Badge Text', contactSection.badge, (badge) => setContactSection({ ...contactSection, badge }))}
-          {renderLangGroup('Main Section Title', contactSection.heading, (heading) => setContactSection({ ...contactSection, heading }))}
-          {renderLangGroup('Name Input Placeholder', contactSection.name_placeholder, (name_placeholder) => setContactSection({ ...contactSection, name_placeholder }))}
-          {renderLangGroup('Message Input Placeholder', contactSection.message_placeholder, (message_placeholder) => setContactSection({ ...contactSection, message_placeholder }), true)}
-          {renderLangGroup('Submit Button Text', contactSection.button_text, (button_text) => setContactSection({ ...contactSection, button_text }))}
-          
-          <div className="space-y-4 pt-4 border-t border-white/10">
-            <h3 className="text-xs font-mono uppercase text-emerald-300">Service Chip Selector Labels</h3>
-            {renderLangGroup('Photo Chip Label', contactSection.chip_photo, (chip_photo) => setContactSection({ ...contactSection, chip_photo }))}
-            {renderLangGroup('3D Chip Label', contactSection.chip_3d, (chip_3d) => setContactSection({ ...contactSection, chip_3d }))}
-            {renderLangGroup('Custom Chip Label', contactSection.chip_custom, (chip_custom) => setContactSection({ ...contactSection, chip_custom }))}
-          </div>
-
-          <button
-            onClick={() => saveContent('contact_section', contactSection)}
-            disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-xs uppercase tracking-wider cursor-pointer"
-          >
-            {saving ? 'Saving...' : 'Save Contact Copy'}
-          </button>
-        </div>
-      )}
-
-      {/* ---------------- TAB 4: GENERAL / WHATSAPP ---------------- */}
+      {/* ================= TAB 1: WHATSAPP SETTINGS ================= */}
       {activeTab === 'general' && (
-        <div className="space-y-6 bg-white/[0.02] border border-white/10 rounded-2xl p-6">
-          <h2 className="text-sm font-mono uppercase text-emerald-400 font-bold">WhatsApp & Direct Dispatch Settings</h2>
+        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-6">
+          <div>
+            <h2 className="text-sm font-mono uppercase text-emerald-400 tracking-wider">
+              Primary WhatsApp Dispatch Channel
+            </h2>
+            <p className="text-xs text-white/50 mt-1">
+              All 1-click booking triggers and 3D marketplace orders will route directly to this
+              phone number.
+            </p>
+          </div>
+
           <div className="max-w-md space-y-4">
             <div>
-              <label className="block text-xs text-white/50 mb-1 font-mono">
-                WhatsApp Phone Number (Country Code + Number, no + or spaces)
+              <label className="block text-xs font-mono text-white/50 uppercase mb-2">
+                WhatsApp Phone Number (Country code without '+' or spaces)
               </label>
               <input
                 type="text"
-                value={generalSettings.whatsapp_number}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, whatsapp_number: e.target.value })}
-                className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-sm font-mono"
+                value={whatsappNumber}
+                onChange={(e) => setWhatsappNumber(e.target.value)}
                 placeholder="21612345678"
+                className="w-full p-3.5 rounded-xl bg-black border border-white/15 text-sm font-mono text-emerald-400 font-bold focus:border-emerald-400 focus:outline-none"
               />
+              <span className="text-[10px] font-mono text-white/30 block mt-1">
+                Example: 216XXXXXXXX (Tunisia), 33XXXXXXXXX (France)
+              </span>
             </div>
 
             <div>
-              <label className="block text-xs text-white/50 mb-1 font-mono">Primary Agency Email</label>
+              <label className="block text-xs font-mono text-white/50 uppercase mb-2">
+                Agency Contact Email
+              </label>
               <input
                 type="email"
-                value={generalSettings.contact_email}
-                onChange={(e) => setGeneralSettings({ ...generalSettings, contact_email: e.target.value })}
-                className="w-full p-2.5 rounded-lg bg-black border border-white/15 text-sm font-mono"
-                placeholder="contact@terkina.com"
+                value={agencyEmail}
+                onChange={(e) => setAgencyEmail(e.target.value)}
+                className="w-full p-3.5 rounded-xl bg-black border border-white/15 text-sm font-mono"
               />
             </div>
           </div>
 
           <button
-            onClick={() => saveContent('contact_settings', generalSettings)}
+            type="button"
+            onClick={() =>
+              handleSave('contact_settings', 'general', {
+                whatsapp_number: whatsappNumber,
+                contact_email: agencyEmail,
+              })
+            }
             disabled={saving}
-            className="px-6 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-xs uppercase tracking-wider cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-xs tracking-wider transition-all disabled:opacity-50 cursor-pointer"
           >
-            {saving ? 'Saving...' : 'Update WhatsApp Number'}
+            {saving ? 'Updating...' : 'Save WhatsApp Configuration'}
+          </button>
+        </div>
+      )}
+
+      {/* ================= TAB 2: LIVE METRICS ================= */}
+      {activeTab === 'metrics' && (
+        <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/10 space-y-6">
+          <div>
+            <h2 className="text-sm font-mono uppercase text-purple-400 tracking-wider">
+              Homepage Animated Counters
+            </h2>
+            <p className="text-xs text-white/50 mt-1">
+              Controls the live statistics displayed in the About section on the homepage.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Stat 1 */}
+            <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
+              <span className="text-xs font-mono text-white/40">Photo Sets (Med Art)</span>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={stats.photoSets}
+                  onChange={(e) => setStats({ ...stats, photoSets: Number(e.target.value) })}
+                  className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
+                />
+                <input
+                  type="text"
+                  value={stats.photoSuffix}
+                  onChange={(e) => setStats({ ...stats, photoSuffix: e.target.value })}
+                  className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
+                />
+              </div>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
+              <span className="text-xs font-mono text-white/40">3D Precision (Tolerance)</span>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  step="0.01"
+                  value={stats.tolerance}
+                  onChange={(e) => setStats({ ...stats, tolerance: Number(e.target.value) })}
+                  className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
+                />
+                <input
+                  type="text"
+                  value={stats.toleranceSuffix}
+                  onChange={(e) => setStats({ ...stats, toleranceSuffix: e.target.value })}
+                  className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
+                />
+              </div>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="p-4 rounded-xl bg-black border border-white/10 space-y-2">
+              <span className="text-xs font-mono text-white/40">Bespoke Craft Ratio</span>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={stats.bespokeCraft}
+                  onChange={(e) => setStats({ ...stats, bespokeCraft: Number(e.target.value) })}
+                  className="w-2/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono font-bold"
+                />
+                <input
+                  type="text"
+                  value={stats.craftSuffix}
+                  onChange={(e) => setStats({ ...stats, craftSuffix: e.target.value })}
+                  className="w-1/3 p-2 rounded bg-white/5 border border-white/10 text-sm font-mono text-center"
+                />
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => handleSave('stats', 'metrics', stats as unknown as Record<string, unknown>)}
+            disabled={saving}
+            className="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase text-xs tracking-wider transition-all disabled:opacity-50 cursor-pointer"
+          >
+            {saving ? 'Updating...' : 'Save Animated Metrics'}
           </button>
         </div>
       )}

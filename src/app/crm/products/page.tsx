@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ShoppingBag, Plus, Edit2, Trash2, CheckCircle2, ArrowLeft, X, Save, Tag, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product3D, MOCK_PRODUCTS_DATA } from '@/lib/mockData';
+import MediaUploader from '@/components/admin/MediaUploader';
 
 export default function CrmProductsPage() {
   const [products, setProducts] = useState<Product3D[]>(MOCK_PRODUCTS_DATA);
@@ -334,15 +335,16 @@ export default function CrmProductsPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-mono text-zinc-400 uppercase mb-1.5">Product Image URL</label>
-                    <input
-                      type="url"
-                      required
-                      value={formData.imageUrl}
-                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-purple-400"
-                      placeholder="https://images.unsplash.com/..."
+                  <div className="sm:col-span-2">
+                    <MediaUploader
+                      currentValue={formData.imageUrl}
+                      onUploadSuccess={(result) => setFormData((prev) => ({ ...prev, imageUrl: result.secure_url }))}
+                      accept="image/*"
+                      folder="terkina/products"
+                      label="Product Image (Cloudinary)"
+                      helperText="Drop high-res PNG/JPG product photo"
+                      compact={true}
+                      onClear={() => setFormData((prev) => ({ ...prev, imageUrl: '' }))}
                     />
                   </div>
                 </div>
