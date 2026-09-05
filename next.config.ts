@@ -22,8 +22,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Hide the X-Powered-By header so attackers can't fingerprint the stack
   poweredByHeader: false,
-  // Standalone output for Docker containerization
-  output: 'standalone',
+  // NOTE: output: 'standalone' is for Docker/self-hosted only.
+  // Vercel has its own file-tracing system — do NOT set this here.
 
   images: {
     remotePatterns: [
