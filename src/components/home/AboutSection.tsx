@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView, useMotionValue, useSpring } from 'framer-motion';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { useT } from '@/lib/translations/TranslationsProvider';
 
 function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string }) {
@@ -29,7 +29,7 @@ function AnimatedNumber({ value, suffix = '' }: { value: number; suffix?: string
 }
 
 export default function AboutSection() {
-  const { dir } = useLanguageStore();
+  const { dir } = useLocale();
   const t = useT();
 
   const [stats, setStats] = useState({
@@ -69,7 +69,7 @@ export default function AboutSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-start">
-          <motion.h3 
+          <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -77,7 +77,7 @@ export default function AboutSection() {
             className="lg:col-span-6 text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase leading-[1.1] break-words"
           >
             {t('home.about.heading', 'Two Specialized Visions. One Cinematic Standard.')}
-          </motion.h3>
+          </motion.h2>
 
           <motion.div 
             initial={{ opacity: 0, y: 30 }}

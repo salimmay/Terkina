@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { LOCALES, localizedPath, withLocale } from '@/context/LocaleContext';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { useT } from '@/lib/translations/TranslationsProvider';
 
 export default function Navbar() {
-  const { lang, setLang, dir } = useLanguage();
+  const { lang, dir } = useLanguage();
   const { whatsappNumber, logoUrl } = useSiteSettings();
   const t = useT();
   const pathname = usePathname();
@@ -56,9 +57,9 @@ export default function Navbar() {
     } else {
       e.preventDefault();
       if (targetId === 'about' || targetId === 'contact') {
-        router.push(`/#${targetId}`);
+        router.push(`${withLocale('/', lang)}#${targetId}`);
       } else if (targetId === 'marketplace' || targetId === 'custom-print') {
-        router.push(`/3d#${targetId}`);
+        router.push(`${withLocale('/3d', lang)}#${targetId}`);
       }
     }
   };
@@ -69,8 +70,8 @@ export default function Navbar() {
         { id: 'custom-print', textKey: 'nav.customPrint', fallback: 'Custom Print', isAnchor: true },
       ]
     : [
-        { id: '/weddings', textKey: 'nav.weddings', fallback: 'Med Art (Weddings)', isAnchor: false, color: 'text-amber-300' },
-        { id: '/production', textKey: 'nav.production', fallback: 'Terkina (Commercial)', isAnchor: false, color: 'text-cyan-300' },
+        { id: withLocale('/weddings', lang), textKey: 'nav.weddings', fallback: 'Med Art (Weddings)', isAnchor: false, color: 'text-amber-300' },
+        { id: withLocale('/production', lang), textKey: 'nav.production', fallback: 'Terkina (Commercial)', isAnchor: false, color: 'text-cyan-300' },
         { id: 'about', textKey: 'nav.about', fallback: 'About Us', isAnchor: true },
         { id: 'contact', textKey: 'nav.contact', fallback: 'Contact', isAnchor: true },
       ];
@@ -96,7 +97,7 @@ export default function Navbar() {
         >
           {/* Brand Logo */}
           <Link
-            href={is3D ? '/3d' : '/'}
+            href={withLocale(is3D ? '/3d' : '/', lang)}
             className="flex items-center gap-2.5 group cursor-pointer"
           >
             <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
@@ -130,7 +131,7 @@ export default function Navbar() {
                 <div key={link.id} className="relative">
                   {link.isAnchor ? (
                     <a
-                      href={is3D ? `/3d#${link.id}` : `/#${link.id}`}
+                      href={is3D ? `${withLocale('/3d', lang)}#${link.id}` : `${withLocale('/', lang)}#${link.id}`}
                       onClick={(e) => handleSmoothScroll(e, link.id)}
                       onMouseEnter={() => setHoveredLink(link.id)}
                       className="relative z-10 block px-4 py-2 text-xs font-mono uppercase tracking-wider text-white/70 hover:text-white transition-colors duration-200 cursor-pointer"
@@ -166,11 +167,14 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 text-[11px] font-mono">
-              {(['en', 'fr', 'ar'] as const).map((locale) => (
-                <button
+              {LOCALES.map((locale) => (
+                // A real link, not a state toggle — each language is its own
+                // crawlable URL, and hreflang points search engines at it.
+                <Link
                   key={locale}
-                  onClick={() => setLang(locale)}
-                  className={`px-2 py-0.5 rounded-full uppercase transition-all duration-200 min-h-[28px] cursor-pointer ${
+                  href={localizedPath(pathname || '/', locale)}
+                  hrefLang={locale}
+                  className={`px-2 py-0.5 rounded-full uppercase transition-all duration-200 min-h-[28px] flex items-center cursor-pointer ${
                     lang === locale
                       ? is3D
                         ? 'bg-purple-600 text-white font-bold shadow-md'
@@ -179,7 +183,7 @@ export default function Navbar() {
                   }`}
                 >
                   {locale}
-                </button>
+                </Link>
               ))}
             </div>
 
@@ -238,7 +242,7 @@ export default function Navbar() {
                   >
                     {link.isAnchor ? (
                       <a
-                        href={is3D ? `/3d#${link.id}` : `/#${link.id}`}
+                        href={is3D ? `${withLocale('/3d', lang)}#${link.id}` : `${withLocale('/', lang)}#${link.id}`}
                         onClick={(e) => handleSmoothScroll(e, link.id)}
                         className="text-2xl font-black uppercase tracking-tight text-white hover:text-amber-300 transition-colors flex items-center justify-between"
                       >

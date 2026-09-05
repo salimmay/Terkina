@@ -201,7 +201,7 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={product.imageUrl}
-                    alt={product.title}
+                    alt={`${product.title} — 3D printed ${product.category} in ${product.material}, TERKINA 3D Lab`}
                     className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${
                       product.is_in_stock
                         ? 'brightness-95 group-hover:brightness-100'

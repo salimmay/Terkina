@@ -4,7 +4,7 @@ import { ReactNode, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'sonner';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { CursorProvider } from '@/components/ui/CustomCursor';
 import { TranslationsProvider } from '@/lib/translations/TranslationsProvider';
 import BrandLoader from '@/components/ui/BrandLoader';
@@ -16,7 +16,7 @@ interface ClientShellProps {
 
 export default function ClientShell({ children }: ClientShellProps) {
   const pathname = usePathname();
-  const { language, dir } = useLanguageStore();
+  const { locale: language, dir } = useLocale();
 
   // Hide global main navbar when inside CRM admin dashboard
   const isCrmRoute = pathname.startsWith('/crm') || pathname.startsWith('/admin');

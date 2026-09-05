@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Syne, Inter, Cairo } from "next/font/google";
 import ClientShell from "@/components/providers/ClientShell";
+import { LocaleProvider } from "@/context/LocaleContext";
+import { buildMetadata } from "@/lib/seo";
 import GoldenCursorTrail from "@/components/GoldenCursorTrail";
 import JsonLd from "@/components/seo/JsonLd";
 import "./globals.css";
@@ -28,38 +30,12 @@ const fontArabic = Cairo({
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://terkina.com";
 
+// Page titles are complete on their own (see src/lib/seo.ts), so no "%s |
+// TERKINA" template — it would double the brand name in every title.
+// Social images come from the opengraph-image.png file convention.
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: {
-    default: "TERKINA | Cinematic Visual Media Studio & Additive 3D Lab",
-    template: "%s | TERKINA",
-  },
-  description:
-    "Tunisia’s premier hybrid creative studio. Luxury wedding cinema (Med Art), commercial advertising production, and precision 3D additive manufacturing.",
-  alternates: {
-    canonical: "/",
-    languages: {
-      "en-US": "/?lang=en",
-      "fr-FR": "/?lang=fr",
-      "ar-TN": "/?lang=ar",
-    },
-  },
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: baseUrl,
-    siteName: "TERKINA",
-    title: "TERKINA — Fusing Cinematic Visuals With Physical 3D Precision",
-    description:
-      "Med Art Luxury Weddings, Commercial Event Production, and Physical 3D Additive Fabrication.",
-    // Image comes from the `opengraph-image.png` file convention in this
-    // directory — listing it here too would emit a duplicate og:image tag.
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "TERKINA | Cinematic Visual Media & 3D Lab",
-    description: "Luxury Weddings, Commercial Advertising, and Precision 3D Printing.",
-  },
+  ...buildMetadata("home", "en"),
 };
 
 export default function RootLayout({
@@ -80,7 +56,12 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-[#09090b] text-[#f4f4f5]">
         {/* Luxurious Gold Light Trail */}
         <GoldenCursorTrail />
-        <ClientShell>{children}</ClientShell>
+        {/* Locale is read from the URL inside the provider, which keeps every
+            page statically prerenderable — reading it from headers() here
+            would opt the entire site out of static rendering. */}
+        <LocaleProvider>
+          <ClientShell>{children}</ClientShell>
+        </LocaleProvider>
       </body>
     </html>
   );

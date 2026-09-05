@@ -5,14 +5,14 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Film, MessageSquare } from 'lucide-react';
 import { CATEGORIES_PRODUCTION } from '@/lib/categories';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { useT } from '@/lib/translations/TranslationsProvider';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
 import JsonLd from '@/components/seo/JsonLd';
 
 export default function ProductionPage() {
-  const { dir } = useLanguageStore();
+  const { dir } = useLocale();
   const t = useT();
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -199,7 +199,7 @@ function ProductionPhotoCard({
             >
               <Image
                 src={project.gallery[currentSlideIndex] || project.coverImage}
-                alt={project.title}
+                alt={`${project.title} — ${project.category} commercial production by TERKINA, Tunisia`}
                 fill
                 className="object-cover"
               />

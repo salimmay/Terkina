@@ -8,9 +8,10 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useCursor } from '@/components/ui/CustomCursor';
 import { useT } from '@/lib/translations/TranslationsProvider';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import { withLocale } from '@/context/LocaleContext';
 
 export default function LivingVideoSplitHero() {
-  const { dir } = useLanguage();
+  const { dir, lang } = useLanguage();
   const t = useT();
   const { heroVideoMedArt, heroVideoTerkina } = useSiteSettings();
   const { setCursorVariant } = useCursor();
@@ -38,6 +39,13 @@ export default function LivingVideoSplitHero() {
       onMouseLeave={() => setCursorVariant('default')}
       className="relative w-full h-[100dvh] min-h-[640px] overflow-hidden flex flex-col md:flex-row bg-black select-none md:cursor-none"
     >
+      {/* The split design has no room for a visible H1, but the page still needs
+          one primary heading for search engines and screen readers. The two
+          panel titles below remain H2s beneath it. */}
+      <h1 className="sr-only">
+        {t('home.h1', 'TERKINA — Wedding Films, Commercial Production and 3D Printing in Tunisia')}
+      </h1>
+
       {/* ========================================================================= */}
       {/* ----------------- FLOATING MAGNETIC LENS (FOLLOWS MOUSE) ----------------- */}
       {/* ========================================================================= */}
@@ -80,7 +88,7 @@ export default function LivingVideoSplitHero() {
       >
         {/* The entire panel is a clickable Link wrapper */}
         <Link
-          href="/weddings"
+          href={withLocale('/weddings', lang)}
           className="relative w-full h-full flex flex-col justify-end p-5 sm:p-8 md:p-14 lg:p-18 z-20 block pt-20 md:pt-0"
         >
           {/* Background Video */}
@@ -144,7 +152,7 @@ export default function LivingVideoSplitHero() {
       >
         {/* The entire panel is a clickable Link wrapper */}
         <Link
-          href="/production"
+          href={withLocale('/production', lang)}
           className="relative w-full h-full flex flex-col justify-end p-5 sm:p-8 md:p-14 lg:p-18 z-20 block pb-12 sm:pb-8 md:pb-14"
         >
           {/* Background Video */}

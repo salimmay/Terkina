@@ -1,16 +1,20 @@
 'use client';
 
-import { useLanguageStore, Language } from '@/store/useLanguageStore';
+import { useLocale, type Locale } from './LocaleContext';
 
+/**
+ * Locale now comes from the URL (see LocaleContext) rather than client state,
+ * so server-rendered HTML is in the right language and each locale has its own
+ * crawlable URL. Switching languages is a navigation, not a setState — see the
+ * language switcher in Navbar.
+ */
 export function useLanguage() {
-  const { language, dir, setLanguage } = useLanguageStore();
+  const { locale, dir } = useLocale();
   return {
-    lang: language,
-    language,
+    lang: locale,
+    language: locale,
     dir,
-    setLanguage,
-    setLang: setLanguage,
   };
 }
 
-export type { Language };
+export type { Locale as Language };

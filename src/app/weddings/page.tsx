@@ -6,14 +6,14 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
 import { CATEGORIES_WEDDINGS } from '@/lib/categories';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { useT } from '@/lib/translations/TranslationsProvider';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
 import JsonLd from '@/components/seo/JsonLd';
 
 export default function WeddingsPage() {
-  const { dir } = useLanguageStore();
+  const { dir } = useLocale();
   const t = useT();
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -200,7 +200,7 @@ function WeddingPhotoCard({
               {(project.gallery[currentSlideIndex] || project.coverImage) ? (
                 <Image
                   src={project.gallery[currentSlideIndex] || project.coverImage}
-                  alt={project.title}
+                  alt={`${project.title} — ${project.category} wedding photography by Med Art, Tunisia`}
                   fill
                   className="object-cover"
                 />

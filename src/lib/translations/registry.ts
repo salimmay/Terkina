@@ -29,6 +29,7 @@ export const TRANSLATION_REGISTRY: TranslationField[] = [
   { key: 'nav.mobileWhatsappCta', group: 'Navigation', label: 'Mobile drawer WhatsApp button', en: '💬 Instant WhatsApp Booking →', fr: '💬 Réservation WhatsApp Instantanée →', ar: '💬 حجز فوري عبر واتساب ←' },
 
   // ========================= HOMEPAGE — HERO =============================
+  { key: 'home.h1', group: 'Homepage — Hero', label: 'Page H1 (screen readers + search engines)', en: 'TERKINA — Wedding Films, Commercial Production and 3D Printing in Tunisia', fr: 'TERKINA — Films de Mariage, Production Publicitaire et Impression 3D en Tunisie', ar: 'تيركينا — أفلام الأعراس، الإنتاج الإعلاني والطباعة ثلاثية الأبعاد في تونس' },
   { key: 'home.hero.medart.subtitle', group: 'Homepage — Hero', label: 'Med Art subtitle', en: 'Capturing timeless love stories, raw emotions, and wedding celebrations with cinematic warmth.', fr: "Immortaliser les plus beaux moments d'émotion, de romance et de célébration nuptiale avec une élégance cinématographique.", ar: 'توثيق أجمل لحظات العمر، العواطف الصادقة، وقصص الحب الخالدة بلمسة سينمائية راقية.' },
   { key: 'home.hero.medart.cta', group: 'Homepage — Hero', label: 'Med Art prompt / button', en: 'Explore Weddings', fr: 'Explorer les Mariages', ar: 'استكشف المعرض' },
   { key: 'home.hero.medart.lensLabel', group: 'Homepage — Hero', label: 'Med Art cursor-lens label', en: 'ENTER MED ART ↗', fr: 'ENTRER MED ART ↗', ar: 'دخول المعرض ↗' },

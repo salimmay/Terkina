@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { TRANSLATION_REGISTRY } from '@/lib/translations/registry';
 
 type Overrides = Record<string, { en: string; fr: string; ar: string }>;
@@ -66,7 +66,7 @@ export function TranslationsProvider({ children }: { children: React.ReactNode }
 // key that was never added to the registry).
 export function useT() {
   const { overrides } = useContext(TranslationsContext);
-  const { language } = useLanguageStore();
+  const { locale: language } = useLocale();
 
   return useCallback(
     (key: string, fallback: string): string => {

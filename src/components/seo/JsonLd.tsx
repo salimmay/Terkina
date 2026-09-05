@@ -32,7 +32,11 @@ export default function JsonLd({ type, data }: JsonLdProps) {
       name: 'TERKINA Studio & 3D Lab',
       image: `${baseUrl}/logo.png`,
       url: baseUrl,
-      telephone: '+21612345678',
+      // Set NEXT_PUBLIC_CONTACT_PHONE in .env. A stale number in structured
+      // data is worse than none, since Google may surface it directly.
+      ...(process.env.NEXT_PUBLIC_CONTACT_PHONE
+        ? { telephone: process.env.NEXT_PUBLIC_CONTACT_PHONE }
+        : {}),
       priceRange: '$$$',
       address: {
         '@type': 'PostalAddress',
@@ -43,6 +47,46 @@ export default function JsonLd({ type, data }: JsonLdProps) {
         '@type': 'GeoCoordinates',
         latitude: 36.8065,
         longitude: 10.1815,
+      },
+      // Tells Google this business serves customers in all three languages.
+      availableLanguage: [
+        { '@type': 'Language', name: 'French', alternateName: 'fr' },
+        { '@type': 'Language', name: 'Arabic', alternateName: 'ar' },
+        { '@type': 'Language', name: 'English', alternateName: 'en' },
+      ],
+      areaServed: { '@type': 'Country', name: 'Tunisia' },
+      hasOfferCatalog: {
+        '@type': 'OfferCatalog',
+        name: 'TERKINA Services',
+        itemListElement: [
+          {
+            '@type': 'Offer',
+            itemOffered: {
+              '@type': 'Service',
+              name: 'Wedding Photography & Cinematography',
+              serviceType: 'Wedding videography',
+              url: `${baseUrl}/weddings`,
+            },
+          },
+          {
+            '@type': 'Offer',
+            itemOffered: {
+              '@type': 'Service',
+              name: 'Commercial & Advertising Production',
+              serviceType: 'Commercial video production',
+              url: `${baseUrl}/production`,
+            },
+          },
+          {
+            '@type': 'Offer',
+            itemOffered: {
+              '@type': 'Service',
+              name: '3D Printing & Rapid Prototyping',
+              serviceType: 'Additive manufacturing',
+              url: `${baseUrl}/3d`,
+            },
+          },
+        ],
       },
       sameAs: [
         'https://instagram.com/terkina',

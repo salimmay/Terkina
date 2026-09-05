@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { useLanguageStore } from '@/store/useLanguageStore';
+import { useLocale } from '@/context/LocaleContext';
 import { useSiteSettings } from '@/lib/useSiteSettings';
 import { useT } from '@/lib/translations/TranslationsProvider';
 import { renderTemplate } from '@/lib/translations/registry';
 
 export default function ContactSection() {
-  const { language: lang, dir } = useLanguageStore();
+  const { locale: lang, dir } = useLocale();
   const { whatsappNumber } = useSiteSettings();
   const t = useT();
 
@@ -70,9 +70,9 @@ export default function ContactSection() {
 
       <div className="max-w-3xl mx-auto relative z-10" dir={dir}>
         <div className="text-center mb-8 sm:mb-12">
-          <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase break-words">
+          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase break-words">
             {t('home.contact.heading', "Let's Create Cinematic History")}
-          </h3>
+          </h2>
         </div>
 
         <motion.form 
