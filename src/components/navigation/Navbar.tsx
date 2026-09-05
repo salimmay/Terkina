@@ -5,9 +5,13 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSiteSettings } from '@/lib/useSiteSettings';
+import { useT } from '@/lib/translations/TranslationsProvider';
 
 export default function Navbar() {
   const { lang, setLang, dir } = useLanguage();
+  const { whatsappNumber, logoUrl } = useSiteSettings();
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const is3D = pathname.includes('3d');
@@ -61,14 +65,14 @@ export default function Navbar() {
 
   const navLinks = is3D
     ? [
-        { id: 'marketplace', label: '3D Collection', ar: 'المتجر والمنتجات', fr: 'Collection 3D', isAnchor: true },
-        { id: 'custom-print', label: 'Custom Print', ar: 'طلب طباعة خاصة', fr: 'Sur Mesure', isAnchor: true },
+        { id: 'marketplace', textKey: 'nav.marketplace', fallback: '3D Collection', isAnchor: true },
+        { id: 'custom-print', textKey: 'nav.customPrint', fallback: 'Custom Print', isAnchor: true },
       ]
     : [
-        { id: '/weddings', label: 'Med Art (Weddings)', ar: 'أعراس (Med Art)', fr: 'Mariages (Med Art)', isAnchor: false, color: 'text-amber-300' },
-        { id: '/production', label: 'Terkina (Commercial)', ar: 'إنتاج (Terkina)', fr: 'Production (Terkina)', isAnchor: false, color: 'text-cyan-300' },
-        { id: 'about', label: 'About Us', ar: 'من نحن', fr: 'À Propos', isAnchor: true },
-        { id: 'contact', label: 'Contact', ar: 'تواصل معنا', fr: 'Contact', isAnchor: true },
+        { id: '/weddings', textKey: 'nav.weddings', fallback: 'Med Art (Weddings)', isAnchor: false, color: 'text-amber-300' },
+        { id: '/production', textKey: 'nav.production', fallback: 'Terkina (Commercial)', isAnchor: false, color: 'text-cyan-300' },
+        { id: 'about', textKey: 'nav.about', fallback: 'About Us', isAnchor: true },
+        { id: 'contact', textKey: 'nav.contact', fallback: 'Contact', isAnchor: true },
       ];
 
   return (
@@ -90,15 +94,18 @@ export default function Navbar() {
               : 'bg-white/[0.03] backdrop-blur-xl border-white/10 shadow-lg'
           }`}
         >
-          {/* Brand Logo with Rotating Star Emblem */}
+          {/* Brand Logo */}
           <Link
             href={is3D ? '/3d' : '/'}
             className="flex items-center gap-2.5 group cursor-pointer"
           >
-            <div className="relative w-6 h-6 rounded-full bg-white/10 flex items-center justify-center border border-white/20 group-hover:border-white/60 transition-colors">
-              <span className="text-white text-[11px] group-hover:rotate-90 transition-transform duration-500 font-mono">
-                ✦
-              </span>
+            <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={logoUrl}
+                alt="TERKINA"
+                className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+              />
             </div>
             <div className="flex flex-col">
               <span className="font-black tracking-[0.24em] text-sm text-white uppercase leading-none font-heading">
@@ -116,7 +123,7 @@ export default function Navbar() {
             className="hidden md:flex items-center gap-1 relative bg-white/[0.02] p-1 rounded-full border border-white/5"
           >
             {navLinks.map((link) => {
-              const label = lang === 'ar' ? link.ar : lang === 'fr' ? link.fr : link.label;
+              const label = t(link.textKey, link.fallback);
               const isHovered = hoveredLink === link.id;
 
               return (
@@ -216,11 +223,11 @@ export default function Navbar() {
             {/* Staggered Navigation Links */}
             <div className="flex flex-col gap-6 relative z-10">
               <span className="text-[10px] font-mono tracking-widest text-white/40 uppercase">
-                {lang === 'ar' ? 'القائمة الرئيسية' : 'Menu Navigation'}
+                {t('nav.mobileMenuTitle', 'Menu Navigation')}
               </span>
 
               {navLinks.map((link, idx) => {
-                const label = lang === 'ar' ? link.ar : lang === 'fr' ? link.fr : link.label;
+                const label = t(link.textKey, link.fallback);
 
                 return (
                   <motion.div
@@ -265,12 +272,12 @@ export default function Navbar() {
 
 
               <a
-                href="https://wa.me/21612345678"
+                href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-3.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs uppercase tracking-widest text-center shadow-xl cursor-pointer"
               >
-                💬 Instant WhatsApp Booking →
+                {t('nav.mobileWhatsappCta', '💬 Instant WhatsApp Booking →')}
               </a>
             </motion.div>
           </motion.div>

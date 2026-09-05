@@ -3,10 +3,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function PrintQuoteCalculator() {
   const { lang, dir } = useLanguage();
-  const WHATSAPP_NUMBER = '21612345678'; // Target WhatsApp number
+  const { whatsappNumber } = useSiteSettings();
 
   const [material, setMaterial] = useState('Translucent SLA Resin');
   const [infill, setInfill] = useState(20);
@@ -33,7 +34,7 @@ export default function PrintQuoteCalculator() {
       `💬 *Custom Notes / CAD Link:* ${notes || 'None'}\n\n` +
       `_Submitted via TERKINA 3D Engineering Lab_`;
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (

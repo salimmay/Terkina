@@ -1,34 +1,17 @@
 'use client';
 
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Center, Float, Sparkles, MeshDistortMaterial } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
-
-function HeroMesh() {
-  return (
-    <Float speed={2} rotationIntensity={0.6} floatIntensity={0.6}>
-      <mesh castShadow receiveShadow scale={1.8}>
-        <icosahedronGeometry args={[1, 4]} />
-        <MeshDistortMaterial
-          color="#220e3a"
-          emissive="#7c3aed"
-          emissiveIntensity={0.4}
-          roughness={0.15}
-          metalness={0.85}
-          distort={0.3}
-          speed={2}
-          wireframe={true}
-        />
-      </mesh>
-    </Float>
-  );
-}
+import PrintRig from './PrintRig';
 
 export default function Hero3D() {
   const { lang, dir } = useLanguage();
   const [mounted, setMounted] = useState(false);
+  const layerRef = useRef<HTMLSpanElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -115,20 +98,53 @@ export default function Hero3D() {
       {/* Right Column: Live Interactive 3D Canvas */}
       <div className="w-full lg:w-1/2 h-[420px] lg:h-[550px] relative flex items-center justify-center">
         {mounted ? (
-          <Canvas camera={{ position: [0, 0, 4.5], fov: 45 }} className="w-full h-full">
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[10, 10, 5]} intensity={1.5} color="#c084fc" />
-            <directionalLight position={[-10, -10, -5]} intensity={0.8} color="#3b82f6" />
-            
-            <Suspense fallback={null}>
-              <Center>
-                <HeroMesh />
-              </Center>
-              <Sparkles count={40} scale={4} size={1.8} speed={0.3} opacity={0.6} color="#c084fc" />
-            </Suspense>
+          <>
+            <Canvas
+              shadows
+              camera={{ position: [0, 0.9, 4.6], fov: 42 }}
+              className="w-full h-full"
+              onCreated={({ gl }) => {
+                // Required for the per-material build-plane clipping.
+                gl.localClippingEnabled = true;
+              }}
+            >
+              <ambientLight intensity={0.45} />
+              <directionalLight position={[6, 8, 5]} intensity={1.1} color="#e9d5ff" castShadow />
+              <directionalLight position={[-8, -4, -6]} intensity={0.5} color="#3b82f6" />
+              <spotLight position={[0, 6, 0]} angle={0.7} penumbra={1} intensity={2.2} color="#a855f7" />
 
-            <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={1} />
-          </Canvas>
+              <Suspense fallback={null}>
+                <PrintRig layerRef={layerRef} progressRef={progressRef} />
+              </Suspense>
+
+              <OrbitControls
+                enableZoom={false}
+                enablePan={false}
+                minPolarAngle={Math.PI / 3}
+                maxPolarAngle={Math.PI / 1.9}
+              />
+            </Canvas>
+
+            {/* Live build readout, driven straight from the render loop */}
+            <div className="absolute bottom-3 left-3 right-3 sm:left-6 sm:right-6 pointer-events-none select-none">
+              <div className="flex items-end justify-between mb-2 font-mono">
+                <div>
+                  <div className="text-[9px] tracking-[0.2em] text-purple-300/60 uppercase">
+                    {lang === 'ar' ? 'جاري الطباعة' : lang === 'fr' ? 'Impression en cours' : 'Printing'}
+                  </div>
+                  <div className="text-sm text-white/90 tabular-nums">
+                    {lang === 'ar' ? 'طبقة' : 'LAYER'}{' '}
+                    <span ref={layerRef}>0000</span>
+                    <span className="text-white/30"> / 1240</span>
+                  </div>
+                </div>
+                <div className="text-[10px] text-purple-300/70 tabular-nums">0.025 mm</div>
+              </div>
+              <div className="h-px w-full bg-white/10 overflow-hidden">
+                <div ref={progressRef} className="h-full bg-purple-400/80" style={{ width: '0%' }} />
+              </div>
+            </div>
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-10 h-10 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />

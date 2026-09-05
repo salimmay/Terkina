@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ThreeDViewer from './ThreeDViewer';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 export interface ThreeDProjectItem {
   id: string;
@@ -25,11 +26,29 @@ interface ThreeDModalProps {
 }
 
 export default function ThreeDModal({ project, onClose }: ThreeDModalProps) {
+  const focusTrapRef = useFocusTrap(!!project);
+
+  // Esc key handler
+  useEffect(() => {
+    if (!project) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [project, onClose]);
+
   if (!project) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10">
+      <div
+        ref={focusTrapRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="threed-modal-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-10"
+      >
         {/* Backdrop Glassmorphism */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -71,7 +90,7 @@ export default function ThreeDModal({ project, onClose }: ThreeDModalProps) {
 
               {/* Title & Description */}
               <div>
-                <h3 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                <h3 id="threed-modal-title" className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
                   {project.title}
                 </h3>
                 <p className="mt-2 text-xs sm:text-sm text-white/70 font-light leading-relaxed">

@@ -5,46 +5,37 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
-import { MOCK_WEDDING_PROJECTS, CATEGORIES_WEDDINGS } from '@/lib/mockData';
+import { CATEGORIES_WEDDINGS } from '@/lib/categories';
 import { useLanguageStore } from '@/store/useLanguageStore';
-import { getTranslation } from '@/lib/i18n';
+import { useT } from '@/lib/translations/TranslationsProvider';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
+import JsonLd from '@/components/seo/JsonLd';
 
 export default function WeddingsPage() {
-  const { language, dir } = useLanguageStore();
-  const t = getTranslation(language);
+  const { dir } = useLanguageStore();
+  const t = useT();
 
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumData | null>(null);
 
-  // Live Supabase albums (falls back to static mock data if query fails/empty)
-  const { projects: liveProjects, loading, isLive } = usePhotoProjects(
-    'MED_ART',
-    MOCK_WEDDING_PROJECTS.map((p) => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      category: p.category,
-      coverImage: p.coverImage,
-      gallery: p.gallery,
-    }))
-  );
+  // Live Supabase albums
+  const { projects: liveProjects, loading } = usePhotoProjects('MED_ART');
 
-  // Dynamic category list derived from live data (falls back to static pills)
+  // Dynamic category list derived from live data
   const liveCategories = [...new Set(liveProjects.map((p) => p.category))];
-  const usingLiveCategories = isLive;
-  const availableCategories = usingLiveCategories
-    ? ['All', ...liveCategories]
-    : CATEGORIES_WEDDINGS;
+  const availableCategories =
+    liveCategories.length > 0 ? ['All', ...liveCategories] : CATEGORIES_WEDDINGS;
 
   // Filtered projects
-  const filteredProjects = activeCategory === 'All'
-    ? liveProjects
-    : liveProjects.filter((p) => p.category === activeCategory);
+  const filteredProjects =
+    activeCategory === 'All'
+      ? liveProjects
+      : liveProjects.filter((p) => p.category === activeCategory);
 
   const handleOpenAlbum = (project: LivePhotoProject) => {
-    const imagesList = project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
+    const imagesList =
+      project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
     setSelectedAlbum({
       id: project.id,
       title: project.title,
@@ -58,31 +49,40 @@ export default function WeddingsPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#050508] text-white selection:bg-amber-400 selection:text-black" dir={dir}>
+    <div
+      className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#050508] text-white selection:bg-amber-400 selection:text-black"
+      dir={dir}
+    >
+      {/* Schema.org Luxury Wedding Cinema Structured Data */}
+      <JsonLd
+        type="gallery"
+        data={{
+          title: 'Med Art Luxury Wedding Cinema & Bridal Photography',
+          description:
+            'Bespoke luxury wedding photography, high-end bridal portraiture, and cinematic storytelling.',
+        }}
+      />
 
       {/* Ambient Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl h-[350px] bg-amber-600/10 blur-[140px] pointer-events-none" />
 
-      {/* ================= PAGE HEADER ================= */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8">
-
-        {/* Category Badge */}
+      {/* Hero Header */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8 sm:pb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] sm:text-xs font-mono text-amber-300 uppercase tracking-widest mb-4">
-          ✨ {t.weddingsPage?.badge || 'MED ART CINEMA & STILLS'}
+          ✨ {t('weddingsPage.badge', 'MED ART CINEMA & STILLS')}
         </div>
 
         {/* Title — break-words prevents horizontal overflow */}
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-[1.05] break-words max-w-full">
-          {t.weddingsPage?.title || 'Luxury Wedding Stories'}
+          {t('weddingsPage.title', 'Luxury Wedding Stories')}
         </h1>
 
         {/* Subtitle */}
         <p className="mt-3 text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed max-w-xl break-words">
-          {t.weddingsPage?.subtitle || 'Editorial bridal portraits, emotional candid rituals, and cinematic wedding films crafted across breathtaking destinations.'}
+          {t('weddingsPage.subtitle', 'Editorial bridal portraits, emotional candid rituals, and cinematic wedding films crafted across breathtaking destinations.')}
         </p>
 
         {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
-        {/* overflow-x-auto + flex-shrink-0 + whitespace-nowrap stops the page blowing out on mobile */}
         <div className="mt-8 flex items-center gap-2 w-full overflow-x-auto pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
           {availableCategories.map((cat) => {
             const isActive = activeCategory === cat;
@@ -104,22 +104,39 @@ export default function WeddingsPage() {
       </div>
 
       {/* ================= ALBUM GRID ================= */}
-      {/* min-w-0 on grid cards prevents CSS grid items from blowing out viewport bounds */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pb-24">
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
-        >
-          <AnimatePresence>
-            {filteredProjects.map((project) => (
-              <WeddingPhotoCard
-                key={project.id}
-                project={project}
-                onClick={() => handleOpenAlbum(project)}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full animate-pulse">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-80 sm:h-96 rounded-2xl bg-white/[0.03] border border-white/5"
               />
             ))}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="py-24 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
+            <span className="text-3xl block mb-3">📸</span>
+            <p className="text-xs font-mono text-white/50">
+              {t('weddingsPage.emptyText', 'No albums published in this category yet.')}
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+          >
+            <AnimatePresence>
+              {filteredProjects.map((project) => (
+                <WeddingPhotoCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => handleOpenAlbum(project)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
 
       {/* 360° Orbital Roaming Gallery Modal */}
@@ -180,12 +197,16 @@ function WeddingPhotoCard({
               transition={{ duration: 0.6 }}
               className="absolute inset-0"
             >
-              <Image
-                src={project.gallery[currentSlideIndex] || project.coverImage}
-                alt={project.title}
-                fill
-                className="object-cover"
-              />
+              {(project.gallery[currentSlideIndex] || project.coverImage) ? (
+                <Image
+                  src={project.gallery[currentSlideIndex] || project.coverImage}
+                  alt={project.title}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-white/30 text-sm">No image</div>
+              )}
             </motion.div>
           </AnimatePresence>
         </motion.div>

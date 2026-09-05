@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Cropper, { Area, Point } from 'react-easy-crop';
 import { X, Check, ZoomIn, Move } from 'lucide-react';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 
 export interface CropData {
   x: number;
@@ -30,6 +31,16 @@ export default function CoverCropModal({
   });
   const [zoom, setZoom] = useState<number>(initialCropData?.zoom || 1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const focusTrapRef = useFocusTrap(true);
+
+  // Esc key handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   const onCropCompleteHandler = (_croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -46,14 +57,20 @@ export default function CoverCropModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
+    <div
+      ref={focusTrapRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cover-crop-modal-title"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md"
+    >
       <div className="relative w-full max-w-2xl bg-[#121218] border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
         
         {/* Header */}
         <div className="p-5 border-b border-zinc-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Move className="w-5 h-5 text-blue-400" />
-            <h3 className="font-heading font-bold text-lg text-white">Adjust Cover Focal Point & Crop</h3>
+            <h3 id="cover-crop-modal-title" className="font-heading font-bold text-lg text-white">Adjust Cover Focal Point & Crop</h3>
           </div>
           <button
             onClick={onClose}

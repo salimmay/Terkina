@@ -22,6 +22,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Hide the X-Powered-By header so attackers can't fingerprint the stack
   poweredByHeader: false,
+  // Standalone output for Docker containerization
+  output: 'standalone',
 
   images: {
     remotePatterns: [

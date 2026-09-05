@@ -6,12 +6,28 @@ import MarketplaceGrid from '@/components/3d-platform/MarketplaceGrid';
 import CustomPrintSection from '@/components/3d-platform/CustomPrintSection';
 import { Cpu, Zap, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
+import JsonLd from '@/components/seo/JsonLd';
+import { useT } from '@/lib/translations/TranslationsProvider';
 
 export default function ThreeDStudioPage() {
-  const { lang, dir } = useLanguage();
+  const { dir } = useLanguage();
+  const t = useT();
 
   return (
     <main className="min-h-screen bg-[#050409] text-white selection:bg-purple-600 selection:text-white" dir={dir}>
+      {/* Schema.org 3D Lab / Physical Objects Rich Snippet */}
+      <JsonLd
+        type="product"
+        data={{
+          title: 'TERKINA 3D Additive Fabrication & Ready-Made Objects',
+          description:
+            'Precision 3D printing, rapid prototyping, and physical custom design manufacturing.',
+          imageUrl: '/og-preview.jpg',
+          price: '95',
+          is_in_stock: true,
+        }}
+      />
+
       {/* 1. Interactive 3D Real-time Hero */}
       <Hero3D />
 
@@ -24,12 +40,10 @@ export default function ThreeDStudioPage() {
             </div>
             <div>
               <h3 className="font-heading font-bold text-lg text-white mb-1">
-                {lang === 'ar' ? 'دقة ميكرونية فائقة' : 'Micron Precision & Tolerances'}
+                {t('threeDStudio.feature1Title', 'Micron Precision & Tolerances')}
               </h3>
               <p className="text-white/60 text-xs sm:text-sm font-light leading-relaxed">
-                {lang === 'ar'
-                  ? 'طباعة ثلاثية الأبعاد بدقة تصل إلى 25 ميكرون لضمان تطابق الأجزاء الميكانيكية والنماذج المعمارية.'
-                  : 'SLA resin and precision sintered layers down to 0.025mm for ultra-smooth surface finish and mechanical fit.'}
+                {t('threeDStudio.feature1Desc', 'SLA resin and precision sintered layers down to 0.025mm for ultra-smooth surface finish and mechanical fit.')}
               </p>
             </div>
           </div>
@@ -40,12 +54,10 @@ export default function ThreeDStudioPage() {
             </div>
             <div>
               <h3 className="font-heading font-bold text-lg text-white mb-1">
-                {lang === 'ar' ? 'تسليم سريع (24-48 ساعة)' : 'Rapid Turnaround (24-48h)'}
+                {t('threeDStudio.feature2Title', 'Rapid Turnaround (24-48h)')}
               </h3>
               <p className="text-white/60 text-xs sm:text-sm font-light leading-relaxed">
-                {lang === 'ar'
-                  ? 'إنتاج النماذج الأولية والمصنوعات بسرعة قياسية مع فحص الجودة قبل التسليم والشحن الفوري.'
-                  : 'Fast-track fabrication workflows with rapid batch prototyping and direct dispatch for time-sensitive launches.'}
+                {t('threeDStudio.feature2Desc', 'Fast-track fabrication workflows with rapid batch prototyping and direct dispatch for time-sensitive launches.')}
               </p>
             </div>
           </div>
@@ -56,12 +68,10 @@ export default function ThreeDStudioPage() {
             </div>
             <div>
               <h3 className="font-heading font-bold text-lg text-white mb-1">
-                {lang === 'ar' ? 'بوليمرات وراتنجات معتمدة' : 'Certified Engineering Polymers'}
+                {t('threeDStudio.feature3Title', 'Certified Engineering Polymers')}
               </h3>
               <p className="text-white/60 text-xs sm:text-sm font-light leading-relaxed">
-                {lang === 'ar'
-                  ? 'خيارات متعددة تشمل الكربون فايبر، الراتنج الشفاف، والـ TPU المرن للاستخدامات الصناعية والجمالية.'
-                  : 'Industrial-grade materials including Carbon Fiber Nylon, PC High-Temp, Translucent Resin, and Flexible TPU.'}
+                {t('threeDStudio.feature3Desc', 'Industrial-grade materials including Carbon Fiber Nylon, PC High-Temp, Translucent Resin, and Flexible TPU.')}
               </p>
             </div>
           </div>

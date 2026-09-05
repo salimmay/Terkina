@@ -1,39 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { useLanguageStore } from '@/store/useLanguageStore';
-
-interface MultilingualField {
-  en?: string;
-  fr?: string;
-  ar?: string;
-}
+import { useSiteSettings } from '@/lib/useSiteSettings';
+import { useT } from '@/lib/translations/TranslationsProvider';
+import { renderTemplate } from '@/lib/translations/registry';
 
 export default function ContactSection() {
   const { language: lang, dir } = useLanguageStore();
-  
-  // Dynamic Contact Form Copy & Settings
-  const [contactSection, setContactSection] = useState<{
-    heading?: MultilingualField;
-    name_placeholder?: MultilingualField;
-    message_placeholder?: MultilingualField;
-    button_text?: MultilingualField;
-  }>({
-    heading: { en: "Let's Create Cinematic History", fr: "Créons Ensemble un Chef-d'Œuvre", ar: 'دعنا نصنع عملاً بصرياً لا يُنسى' },
-    name_placeholder: { en: 'e.g. Alexander & Sophia / Brand Name', fr: 'ex. Alexandre & Sophie / Nom de Marque', ar: 'مثال: أحمد وسارة / اسم الشركة' },
-    message_placeholder: {
-      en: 'Tell us about your wedding date, venue, or commercial campaign scope...',
-      fr: 'Parlez-nous de votre date de mariage, lieu, ou projet publicitaire...',
-      ar: 'أخبرنا عن موعد الزفاف والمكان، أو تفاصيل الحملة الإعلانية والإنتاج...',
-    },
-    button_text: { en: 'Start WhatsApp Chat', fr: 'Lancer le Chat WhatsApp', ar: 'تواصل عبر واتساب فوراً' },
-  });
-
-  const [contactSettings, setContactSettings] = useState({
-    whatsapp_number: '21612345678',
-    contact_email: 'contact@terkina.com',
-  });
+  const { whatsappNumber } = useSiteSettings();
+  const t = useT();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -42,52 +20,17 @@ export default function ContactSection() {
   });
 
   const serviceOptions = [
-    { 
-      id: 'Med Art (Weddings)', 
-      label: '💍 Weddings (Med Art)', 
-      ar: '💍 تصوير أعراس (Med Art)',
-      fr: '💍 Mariages (Med Art)' 
-    },
-    { 
-      id: 'Terkina (Commercial)', 
-      label: '🎬 Commercial / Ads', 
-      ar: '🎬 إعلانات وإنتاج تجاري',
-      fr: '🎬 Commercial / Pub' 
-    },
-    { 
-      id: 'Event Coverage', 
-      label: '📸 Events & Festivals', 
-      ar: '📸 تغطية فعاليات ومؤتمرات',
-      fr: '📸 Événements & Festivals' 
-    },
+    { id: 'Med Art (Weddings)', textKey: 'home.contact.serviceWeddings', fallback: '💍 Weddings (Med Art)' },
+    { id: 'Terkina Production (Commercial & Ads)', textKey: 'home.contact.serviceProduction', fallback: '🎬 Commercial & Ads (Terkina)' },
+    { id: '3D Printing & Engineering', textKey: 'home.contact.service3d', fallback: '🧊 3D Print Lab & Prototyping' },
   ];
-
-  useEffect(() => {
-    fetch('/api/content')
-      .then((res) => res.json())
-      .then((items) => {
-        if (Array.isArray(items)) {
-          items.forEach((item) => {
-            if (item.key === 'contact_section' && item.content) setContactSection(item.content);
-            if (item.key === 'contact_settings' && item.content) setContactSettings(item.content);
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const getLangText = (field?: MultilingualField, fallback: string = '') => {
-    if (!field) return fallback;
-    const currentLang = lang as 'en' | 'fr' | 'ar';
-    return field[currentLang] || field.en || fallback;
-  };
 
   const handleWhatsAppSend = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 1. Silently log to Supabase / CRM so you have a record in your admin dashboard
     try {
-      await fetch('/api/messages', {
+      const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,18 +39,28 @@ export default function ContactSection() {
           content: formData.message,
         }),
       });
+      if (!res.ok) throw new Error('Failed to save lead');
     } catch (err) {
       console.error('Lead backup log failed, proceeding to WhatsApp', err);
+      toast.error(
+        lang === 'ar'
+          ? 'تعذر حفظ الطلب في السجلات، لكن سيتم فتح واتساب على أي حال.'
+          : lang === 'fr'
+            ? "Impossible d'enregistrer la demande, mais WhatsApp va tout de même s'ouvrir."
+            : "Couldn't save this inquiry to our records, but WhatsApp will still open."
+      );
     }
 
     // 2. Open WhatsApp immediately
-    const text = `*New Inquiry via TERKINA & MED ART* ✨\n\n` +
-      `👤 *Name / Client:* ${formData.name}\n` +
-      `🎯 *Service:* ${formData.service}\n` +
-      `💬 *Details:* ${formData.message}`;
+    const text = renderTemplate(
+      t(
+        'whatsapp.contactInquiry.template',
+        '*New Inquiry via TERKINA & MED ART* ✨\n\n👤 *Name / Client:* {{name}}\n🎯 *Service:* {{service}}\n💬 *Details:* {{message}}'
+      ),
+      { name: formData.name, service: formData.service, message: formData.message }
+    );
 
-    const num = contactSettings.whatsapp_number.replace(/[^\d]/g, '');
-    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -118,7 +71,7 @@ export default function ContactSection() {
       <div className="max-w-3xl mx-auto relative z-10" dir={dir}>
         <div className="text-center mb-8 sm:mb-12">
           <h3 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight uppercase break-words">
-            {getLangText(contactSection.heading, "Let's Create Cinematic History")}
+            {t('home.contact.heading', "Let's Create Cinematic History")}
           </h3>
         </div>
 
@@ -131,7 +84,7 @@ export default function ContactSection() {
         >
           <div>
             <label className="block text-xs font-mono text-white/50 uppercase mb-3">
-              {lang === 'ar' ? 'الخدمة المطلوبة' : lang === 'fr' ? 'Type de Service' : 'Select Service Type'}
+              {t('home.contact.serviceLabel', 'Select Service Type')}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {serviceOptions.map((s) => (
@@ -145,7 +98,7 @@ export default function ContactSection() {
                       : 'bg-white/5 border-white/10 text-white/60 hover:text-white'
                   }`}
                 >
-                  {lang === 'ar' ? s.ar : lang === 'fr' ? s.fr : s.label}
+                  {t(s.textKey, s.fallback)}
                 </button>
               ))}
             </div>
@@ -154,7 +107,7 @@ export default function ContactSection() {
           {/* Name Field */}
           <div>
             <label className="block text-xs font-mono text-white/50 uppercase mb-2">
-              {lang === 'ar' ? 'الاسم الكامل / العروسين / الشركة' : lang === 'fr' ? 'Votre Nom / Couple / Entreprise' : 'Your Name / Couple / Brand'}
+              {t('home.contact.nameLabel', 'Your Name / Couple / Brand')}
             </label>
             <input
               type="text"
@@ -162,14 +115,14 @@ export default function ContactSection() {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white text-base md:text-sm placeholder-white/20 focus:outline-none focus:border-emerald-400/50 transition-colors min-h-[48px]"
-              placeholder={getLangText(contactSection.name_placeholder, lang === 'ar' ? 'مثال: أحمد وسارة / اسم الشركة' : 'e.g. Alexander & Sophia / Brand Name')}
+              placeholder={t('home.contact.namePlaceholder', 'e.g. Alexander & Sophia / Brand Name')}
             />
           </div>
 
           {/* Message Field */}
           <div>
             <label className="block text-xs font-mono text-white/50 uppercase mb-2">
-              {lang === 'ar' ? 'تفاصيل المشروع والموعد' : lang === 'fr' ? 'Détails du Projet & Date' : 'Project Scope & Dates'}
+              {t('home.contact.messageLabel', 'Project Scope & Dates')}
             </label>
             <textarea
               rows={4}
@@ -177,7 +130,7 @@ export default function ContactSection() {
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               className="w-full px-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white text-base md:text-sm placeholder-white/20 focus:outline-none focus:border-emerald-400/50 transition-colors resize-none min-h-[120px]"
-              placeholder={getLangText(contactSection.message_placeholder, lang === 'ar' ? 'أخبرنا عن موعد الزفاف والمكان، أو تفاصيل الحملة الإعلانية والإنتاج...' : 'Tell us about your wedding date, venue, or commercial campaign scope...')}
+              placeholder={t('home.contact.messagePlaceholder', 'Tell us about your wedding date, venue, or commercial campaign scope...')}
             />
           </div>
 
@@ -189,7 +142,7 @@ export default function ContactSection() {
             className="w-full py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold uppercase text-xs tracking-widest transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer mt-2 min-h-[48px]"
           >
             <span>💬</span>
-            <span>{getLangText(contactSection.button_text, lang === 'ar' ? 'تواصل عبر واتساب فوراً' : 'Start WhatsApp Chat')}</span>
+            <span>{t('home.contact.buttonText', 'Start WhatsApp Chat')}</span>
             <span>→</span>
           </motion.button>
         </motion.form>

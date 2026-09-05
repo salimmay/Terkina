@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
+import { toast } from 'sonner';
 import {
   UploadCloud,
   FileImage,
@@ -72,6 +73,7 @@ export default function MediaUploader({
   const [isDragOver, setIsDragOver] = useState(false);
   const [fileQueue, setFileQueue] = useState<UploadingFileStatus[]>([]);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [modelWarning, setModelWarning] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const getResourceTypeIcon = (filename: string, resType?: string) => {
@@ -83,6 +85,22 @@ export default function MediaUploader({
       return <Video className="w-5 h-5 text-cyan-400" />;
     }
     return <FileImage className="w-5 h-5 text-blue-400" />;
+  };
+
+  // Many web-based 3D tools (AI generators, online converters) preview textures
+  // via a temporary browser blob: URL and forget to embed the actual image
+  // bytes on export — the reference gets baked into the .glb as dead text that
+  // can never resolve anywhere else. Catch it here so the mistake surfaces the
+  // moment it's uploaded, not weeks later in a customer's browser console.
+  const checkGlbForDeadBlobTextures = async (file: File): Promise<boolean> => {
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    if (ext !== 'glb' && ext !== 'gltf') return false;
+    try {
+      const text = await file.text();
+      return text.includes('blob:');
+    } catch {
+      return false;
+    }
   };
 
   const uploadFile = async (file: File): Promise<CloudinaryUploadResult> => {
@@ -107,8 +125,18 @@ export default function MediaUploader({
 
   const handleFiles = useCallback(
     async (files: FileList | File[]) => {
-      const fileList = Array.from(files);
+      let fileList = Array.from(files);
       if (!fileList.length) return;
+
+      // This dropzone only ever keeps one value (e.g. a cover image) — silently
+      // uploading every dropped file and letting the last one win discards the
+      // rest with no feedback, so reject the extras up front instead.
+      if (!multiple && fileList.length > 1) {
+        toast.warning(
+          `Only one file is allowed here — uploading "${fileList[0].name}" and skipping the other ${fileList.length - 1}. Use the gallery uploader below for multiple photos.`
+        );
+        fileList = [fileList[0]];
+      }
 
       const initialQueueItems: UploadingFileStatus[] = fileList.map((file) => ({
         id: `${file.name}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -119,6 +147,7 @@ export default function MediaUploader({
       }));
 
       setFileQueue((prev) => (multiple ? [...prev, ...initialQueueItems] : initialQueueItems));
+      setModelWarning(null);
 
       const successfulUrls: string[] = [];
 
@@ -153,6 +182,12 @@ export default function MediaUploader({
           successfulUrls.push(result.secure_url);
           if (onUploadSuccess) {
             onUploadSuccess(result);
+          }
+
+          if (await checkGlbForDeadBlobTextures(file)) {
+            setModelWarning(
+              `"${file.name}" was uploaded, but its texture references a temporary blob: URL from the tool it was exported from — the color/texture won't display live. Re-export the model with textures embedded (packed), then re-upload.`
+            );
           }
         } catch (error: unknown) {
           const err = error as { message?: string };
@@ -309,7 +344,10 @@ export default function MediaUploader({
               {onClear && (
                 <button
                   type="button"
-                  onClick={onClear}
+                  onClick={() => {
+                    setModelWarning(null);
+                    onClear();
+                  }}
                   className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-colors"
                   title="Remove Asset"
                 >
@@ -370,6 +408,10 @@ export default function MediaUploader({
           </div>
         </div>
       </div>
+
+      {modelWarning && (
+        <p className="text-xs text-red-400 leading-relaxed">{modelWarning}</p>
+      )}
 
       {/* Active Upload Queue & Real-time Progress */}
       {fileQueue.length > 0 && (

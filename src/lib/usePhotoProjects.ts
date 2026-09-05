@@ -32,7 +32,7 @@ function stripTagPrefix(description: string | null): string {
 
 export function usePhotoProjects(
   platform: 'MED_ART' | 'TERKINA_PROD',
-  fallback: LivePhotoProject[]
+  fallback: LivePhotoProject[] = []
 ) {
   const [projects, setProjects] = useState<LivePhotoProject[]>(fallback);
   const [loading, setLoading] = useState(true);
@@ -53,6 +53,7 @@ export function usePhotoProjects(
           description,
           status,
           deleted_at,
+          cover_image_url,
           photo_gallery (
             id,
             image_url,
@@ -82,7 +83,18 @@ export function usePhotoProjects(
             const frames = (item.photo_gallery || [])
               .slice()
               .sort((a, b) => a.sort_order - b.sort_order)
-              .map((g) => g.image_url);
+              .map((g) => g.image_url)
+              .filter((url) => typeof url === 'string' && url.length > 0);
+
+            const validCover = item.cover_image_url && item.cover_image_url.length > 0
+              ? item.cover_image_url
+              : null;
+
+            const gallery = frames.length > 0
+              ? frames
+              : validCover
+                ? [validCover]
+                : [];
 
             return {
               id: item.id,
@@ -91,11 +103,8 @@ export function usePhotoProjects(
               category:
                 item.description?.match(/\[Platform:[^\]]*Category:\s*([^\]]+)\]/)?.[1]?.trim() ||
                 'Portfolio',
-              coverImage: frames[0] || item.cover_image_url || '',
-              gallery:
-                frames.length > 0
-                  ? frames
-                  : [item.cover_image_url].filter((u): u is string => !!u),
+              coverImage: gallery[0] || '/placeholder.svg',
+              gallery: gallery.length > 0 ? gallery : ['/placeholder.svg'],
             };
           });
 

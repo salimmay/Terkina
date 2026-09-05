@@ -6,9 +6,13 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 import ScrollIndicator from './home/ScrollIndicator';
 import { useLanguage } from '@/context/LanguageContext';
 import { useCursor } from '@/components/ui/CustomCursor';
+import { useT } from '@/lib/translations/TranslationsProvider';
+import { useSiteSettings } from '@/lib/useSiteSettings';
 
 export default function LivingVideoSplitHero() {
-  const { lang, dir } = useLanguage();
+  const { dir } = useLanguage();
+  const t = useT();
+  const { heroVideoMedArt, heroVideoTerkina } = useSiteSettings();
   const { setCursorVariant } = useCursor();
   const [hoveredSide, setHoveredSide] = useState<'left' | 'right' | null>(null);
 
@@ -23,8 +27,9 @@ export default function LivingVideoSplitHero() {
     mouseY.set(e.clientY);
   };
 
-  const MED_ART_VIDEO = '/videos/med-art-hero.mp4';
-  const TERKINA_VIDEO = '/videos/terkina-hero.mp4';
+  // Admin-managed reels (Cloudinary), falling back to the bundled .webm files.
+  const MED_ART_VIDEO = heroVideoMedArt;
+  const TERKINA_VIDEO = heroVideoTerkina;
 
   return (
     <section
@@ -56,8 +61,8 @@ export default function LivingVideoSplitHero() {
       >
         <span className="text-[10px] font-mono tracking-widest font-extrabold text-white uppercase px-2 leading-tight">
           {hoveredSide === 'left'
-            ? lang === 'ar' ? 'دخول المعرض ↗' : 'ENTER MED ART ↗'
-            : lang === 'ar' ? 'دخول الإنتاج ↗' : 'ENTER TERKINA ↗'}
+            ? t('home.hero.medart.lensLabel', 'ENTER MED ART ↗')
+            : t('home.hero.terkina.lensLabel', 'ENTER TERKINA ↗')}
         </span>
       </motion.div>
 
@@ -98,8 +103,7 @@ export default function LivingVideoSplitHero() {
               preload="auto"
               className="w-full h-full object-cover"
             >
-              <source src="/videos/med-art-hero.webm" type="video/webm" />
-              <source src={MED_ART_VIDEO} type="video/mp4" />
+              <source src={MED_ART_VIDEO} />
             </video>
 
             {/* Amber Ambient Vignette */}
@@ -114,14 +118,12 @@ export default function LivingVideoSplitHero() {
             </h2>
 
             <p className="text-xs sm:text-sm md:text-base text-amber-100/75 font-light leading-relaxed max-w-sm drop-shadow line-clamp-2 sm:line-clamp-none">
-              {lang === 'ar'
-                ? 'توثيق أجمل لحظات العمر، العواطف الصادقة، وقصص الحب الخالدة بلمسة سينمائية راقية.'
-                : 'Capturing timeless love stories, raw emotions, and wedding celebrations with cinematic warmth.'}
+              {t('home.hero.medart.subtitle', 'Capturing timeless love stories, raw emotions, and wedding celebrations with cinematic warmth.')}
             </p>
 
             {/* Subtle Inline Kinetic Prompt */}
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono tracking-widest text-amber-300 uppercase mt-0.5 sm:mt-2">
-              <span>{lang === 'ar' ? 'استكشف المعرض' : 'Explore Weddings'}</span>
+              <span>{t('home.hero.medart.cta', 'Explore Weddings')}</span>
               <span>↗</span>
             </div>
           </div>
@@ -165,8 +167,7 @@ export default function LivingVideoSplitHero() {
               preload="auto"
               className="w-full h-full object-cover"
             >
-              <source src="/videos/terkina-hero.webm" type="video/webm" />
-              <source src={TERKINA_VIDEO} type="video/mp4" />
+              <source src={TERKINA_VIDEO} />
             </video>
 
             {/* Cyan Ambient Vignette */}
@@ -179,14 +180,12 @@ export default function LivingVideoSplitHero() {
             </h2>
 
             <p className="text-xs sm:text-sm md:text-base text-cyan-100/75 font-light leading-relaxed max-w-sm drop-shadow line-clamp-2 sm:line-clamp-none">
-              {lang === 'ar'
-                ? 'إنتاج محتوى إعلاني عالي التأثير، تصوير المنتجات، وتغطية الفعاليات الكبرى بأعلى معايير الإخراج.'
-                : 'High-impact commercial photography, luxury product shoots, and cinematic brand campaigns.'}
+              {t('home.hero.terkina.subtitle', 'High-impact commercial photography, luxury product shoots, and cinematic brand campaigns.')}
             </p>
 
             {/* Subtle Inline Kinetic Prompt */}
             <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-mono tracking-widest text-cyan-300 uppercase mt-0.5 sm:mt-2">
-              <span>{lang === 'ar' ? 'استكشف الإنتاج' : 'Explore Production'}</span>
+              <span>{t('home.hero.terkina.cta', 'Explore Production')}</span>
               <span>↗</span>
             </div>
           </div>

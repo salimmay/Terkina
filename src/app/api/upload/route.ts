@@ -84,29 +84,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload to Cloudinary using upload_stream with resource_type: 'auto'
+    // Convert in-memory buffer to Data URI for atomic upload with extended timeout
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+    const mimeType = file.type || 'application/octet-stream';
+    const fileDataUri = `data:${mimeType};base64,${buffer.toString('base64')}`;
 
-    const uploadResult = await new Promise<UploadApiResponse>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {
-          folder: sanitizedFolder,
-          resource_type: resourceTypeOverride,
-          use_filename: true,
-          unique_filename: true,
-          filename_override: file.name.replace(/[^\w.\-]/g, '_'), // sanitize filename
-        },
-        (error, result) => {
-          if (error || !result) {
-            reject(error || new Error('Upload to Cloudinary failed with no result'));
-          } else {
-            resolve(result);
-          }
-        }
-      );
-
-      uploadStream.end(buffer);
+    const uploadResult = await cloudinary.uploader.upload(fileDataUri, {
+      folder: sanitizedFolder,
+      resource_type: resourceTypeOverride,
+      use_filename: true,
+      unique_filename: true,
+      filename_override: file.name.replace(/[^\w.\-]/g, '_'),
+      timeout: 120000, // 120s timeout prevents 499 Request Timeout on large media
     });
 
     return NextResponse.json({

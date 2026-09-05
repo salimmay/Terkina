@@ -4,43 +4,37 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Film, MessageSquare } from 'lucide-react';
-import { MOCK_PRODUCTION_PROJECTS, CATEGORIES_PRODUCTION } from '@/lib/mockData';
+import { CATEGORIES_PRODUCTION } from '@/lib/categories';
 import { useLanguageStore } from '@/store/useLanguageStore';
-import { getTranslation } from '@/lib/i18n';
+import { useT } from '@/lib/translations/TranslationsProvider';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
+import JsonLd from '@/components/seo/JsonLd';
 
 export default function ProductionPage() {
-  const { language, dir } = useLanguageStore();
-  const t = getTranslation(language);
+  const { dir } = useLanguageStore();
+  const t = useT();
 
   const [activeCategory, setActiveCategory] = useState('All');
   const [selectedAlbum, setSelectedAlbum] = useState<AlbumData | null>(null);
 
-  // Live Supabase albums (falls back to static mock data if query fails/empty)
-  const { projects: liveProjects, loading, isLive } = usePhotoProjects(
-    'TERKINA_PROD',
-    MOCK_PRODUCTION_PROJECTS.map((p) => ({
-      id: p.id,
-      title: p.title,
-      description: p.description,
-      category: p.category,
-      coverImage: p.coverImage,
-      gallery: p.gallery,
-    }))
-  );
+  // Live Supabase albums
+  const { projects: liveProjects, loading } = usePhotoProjects('TERKINA_PROD');
 
-  // Dynamic category list derived from live data (falls back to static pills)
+  // Dynamic category list derived from live data
   const liveCategories = [...new Set(liveProjects.map((p) => p.category))];
-  const availableCategories = isLive ? ['All', ...liveCategories] : CATEGORIES_PRODUCTION;
+  const availableCategories =
+    liveCategories.length > 0 ? ['All', ...liveCategories] : CATEGORIES_PRODUCTION;
 
   // Filtered projects
-  const filteredProjects = activeCategory === 'All'
-    ? liveProjects
-    : liveProjects.filter((p) => p.category === activeCategory);
+  const filteredProjects =
+    activeCategory === 'All'
+      ? liveProjects
+      : liveProjects.filter((p) => p.category === activeCategory);
 
   const handleOpenAlbum = (project: LivePhotoProject) => {
-    const imagesList = project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
+    const imagesList =
+      project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
     setSelectedAlbum({
       id: project.id,
       title: project.title,
@@ -54,27 +48,38 @@ export default function ProductionPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#050508] text-white selection:bg-cyan-400 selection:text-black" dir={dir}>
+    <div
+      className="relative min-h-screen w-full max-w-full overflow-x-hidden bg-[#050508] text-white selection:bg-cyan-400 selection:text-black"
+      dir={dir}
+    >
+      {/* Schema.org Commercial Video Production Structured Data */}
+      <JsonLd
+        type="gallery"
+        data={{
+          title: 'TERKINA Commercial Video Production House',
+          description:
+            'Commercial advertising campaigns, luxury product photography, and corporate documentary video.',
+        }}
+      />
 
       {/* Ambient Background Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[90vw] max-w-4xl h-[350px] bg-cyan-600/10 blur-[140px] pointer-events-none" />
 
       {/* ================= PAGE HEADER ================= */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8">
-
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8 sm:pb-12">
         {/* Category Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-[10px] sm:text-xs font-mono text-cyan-300 uppercase tracking-widest mb-4">
-          🎬 {t.productionPage?.badge || 'TERKINA PRODUCTION HOUSE'}
+          🎬 {t('productionPage.badge', 'TERKINA PRODUCTION HOUSE')}
         </div>
 
         {/* Title — break-words prevents horizontal overflow */}
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-[1.05] break-words max-w-full">
-          {t.productionPage?.title || 'Commercial & Video Production'}
+          {t('productionPage.title', 'Commercial & Video Production')}
         </h1>
 
         {/* Subtitle */}
         <p className="mt-3 text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed max-w-xl break-words">
-          {t.productionPage?.subtitle || 'High-octane brand campaigns, commercial shoots, corporate conferences, and dynamic event coverage with industry-grade cinema equipment.'}
+          {t('productionPage.subtitle', 'High-octane brand campaigns, commercial shoots, corporate conferences, and dynamic event coverage with industry-grade cinema equipment.')}
         </p>
 
         {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
@@ -100,20 +105,38 @@ export default function ProductionPage() {
 
       {/* ================= ALBUM GRID ================= */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pb-24">
-        <motion.div
-          layout
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
-        >
-          <AnimatePresence>
-            {filteredProjects.map((project) => (
-              <ProductionPhotoCard
-                key={project.id}
-                project={project}
-                onClick={() => handleOpenAlbum(project)}
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full animate-pulse">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-80 sm:h-96 rounded-2xl bg-white/[0.03] border border-white/5"
               />
             ))}
-          </AnimatePresence>
-        </motion.div>
+          </div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="py-24 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
+            <span className="text-3xl block mb-3">🎬</span>
+            <p className="text-xs font-mono text-white/50">
+              {t('productionPage.emptyText', 'No commercial projects published in this category yet.')}
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 w-full"
+          >
+            <AnimatePresence>
+              {filteredProjects.map((project) => (
+                <ProductionPhotoCard
+                  key={project.id}
+                  project={project}
+                  onClick={() => handleOpenAlbum(project)}
+                />
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
       </div>
 
       {/* 360° Orbital Roaming Gallery Modal */}

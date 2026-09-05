@@ -163,7 +163,13 @@ function SortableItem({
         isDragging ? 'opacity-50 border-blue-500 scale-105' : 'border-zinc-800 hover:border-zinc-700'
       }`}
     >
-      <Image src={item.url} alt="Gallery item" fill className="object-cover" />
+      <Image
+        src={item.url}
+        alt="Gallery item"
+        fill
+        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+        className="object-cover"
+      />
 
       {/* Drag handle overlay */}
       <div

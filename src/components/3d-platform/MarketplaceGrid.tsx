@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/context/LanguageContext';
 import { createClient } from '@/lib/supabase/client';
+import { useSiteSettings } from '@/lib/useSiteSettings';
+import { useT } from '@/lib/translations/TranslationsProvider';
+import { renderTemplate } from '@/lib/translations/registry';
 import Product3DModal from './Product3DModal';
 
 export interface Product3D {
@@ -13,6 +16,7 @@ export interface Product3D {
   price: string;
   show_price: boolean;
   is_in_stock: boolean;
+  available_colors?: string[];
   material: string;
   dimensions: string;
   imageUrl: string;
@@ -25,52 +29,18 @@ export interface Product3D {
   };
 }
 
-// Static fallback shown only if the live query fails (e.g. network/RLS issue)
-const SAMPLE_PRODUCTS: Product3D[] = [
-  {
-    id: '1',
-    title: 'Aetheric Geometric Table Lamp',
-    category: 'lighting',
-    price: '180 TND',
-    show_price: true,
-    is_in_stock: true,
-    material: 'Matte Bio-PLA & Warm LED Core',
-    dimensions: '18 × 18 × 24 cm',
-    imageUrl:
-      'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=1200&auto=format&fit=crop',
-    description:
-      'Ambient parametric desk lamp featuring internal organic shadow casting, diffusive polymer core, and built-in brass touch switch.',
-    specs: { layerHeight: '0.12 mm', printTime: '22 Hours', weight: '520g' },
-  },
-  {
-    id: '2',
-    title: 'Monolithic Headphone & Watch Stand',
-    category: 'accessories',
-    price: '95 TND',
-    show_price: true,
-    is_in_stock: true,
-    material: 'High-Density Composite Carbon PLA',
-    dimensions: '12 × 15 × 28 cm',
-    imageUrl:
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=1200&auto=format&fit=crop',
-    description:
-      'Weighted minimalist desk organizer engineered for audiophile over-ear headphones with integrated magnetic cable routing.',
-    specs: { layerHeight: '0.16 mm', printTime: '14 Hours', weight: '680g Solid' },
-  },
-];
-
 interface MarketplaceGridProps {
   onSelectProduct?: (product: Product3D) => void;
 }
 
 export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProps) {
-  const { lang, dir } = useLanguage();
+  const { dir } = useLanguage();
+  const { whatsappNumber } = useSiteSettings();
+  const t = useT();
   const [products, setProducts] = useState<Product3D[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [internalModalProduct, setInternalModalProduct] = useState<Product3D | null>(null);
-
-  const WHATSAPP_NUMBER = '21612345678';
 
   useEffect(() => {
     async function fetchLiveProducts() {
@@ -92,8 +62,12 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
               title: item.title as string,
               category: (specs.category as string) || 'decor',
               price: (specs.price as string) || 'Custom Quote',
-              show_price: (specs.show_price as boolean) ?? true,
-              is_in_stock: (specs.is_in_stock as boolean) ?? true,
+              show_price: (item.show_price as boolean) ?? (specs.show_price as boolean) ?? true,
+              is_in_stock: (item.is_in_stock as boolean) ?? (specs.is_in_stock as boolean) ?? true,
+              available_colors:
+                (item.available_colors as string[]) ??
+                (specs.available_colors as string[]) ??
+                ['Default / Natural'],
               material: (specs.material as string) || 'Matte Bio-PLA',
               dimensions: (specs.dimensions as string) || '18 × 18 × 24 cm',
               imageUrl: (item.cover_image_url as string) || '/placeholder.jpg',
@@ -109,12 +83,9 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
         );
       } else {
         if (error) {
-          console.error('Live inventory fetch failed, showing fallback collection:', error.message);
-          setProducts(SAMPLE_PRODUCTS);
-        } else {
-          // Query succeeded but no published products exist yet
-          setProducts([]);
+          console.error('Live inventory fetch error:', error.message);
         }
+        setProducts([]);
       }
       setLoading(false);
     }
@@ -139,18 +110,30 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
   const handleWhatsAppAction = (e: React.MouseEvent, p: Product3D) => {
     e.stopPropagation();
 
-    const priceText = p.show_price ? p.price : 'Price on Request';
-    const intent = p.is_in_stock ? 'Order Inquiry' : 'Custom Backorder Inquiry (Out of Stock)';
+    const priceText = p.show_price ? p.price : t('marketplace.priceOnRequestBadge', 'Price on Request');
+    const intent = p.is_in_stock
+      ? t('whatsapp.marketplaceOrder.intentInStock', 'Order Inquiry')
+      : t('whatsapp.marketplaceOrder.intentBackorder', 'Custom Backorder Inquiry (Out of Stock)');
+    const availability = p.is_in_stock
+      ? t('whatsapp.marketplaceOrder.availabilityInStock', 'In Stock')
+      : t('whatsapp.marketplaceOrder.availabilityBackorder', 'Made to Order / Backorder');
 
-    const text =
-      `*${intent}: ${p.title}* 📦\n\n` +
-      `💰 *Price:* ${priceText}\n` +
-      `🧵 *Material:* ${p.material}\n` +
-      `📐 *Dimensions:* ${p.dimensions}\n` +
-      `⚡ *Availability:* ${p.is_in_stock ? 'In Stock' : 'Made to Order / Backorder'}\n\n` +
-      `Hello! I would like to inquire about this 3D product.`;
+    const text = renderTemplate(
+      t(
+        'whatsapp.marketplaceOrder.template',
+        '*{{intent}}: {{title}}* 📦\n\n💰 *Price:* {{price}}\n🧵 *Material:* {{material}}\n📐 *Dimensions:* {{dimensions}}\n⚡ *Availability:* {{availability}}\n\nHello! I would like to inquire about this 3D product.'
+      ),
+      {
+        intent,
+        title: p.title,
+        price: priceText,
+        material: p.material,
+        dimensions: p.dimensions,
+        availability,
+      }
+    );
 
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`, '_blank');
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   return (
@@ -160,21 +143,21 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div>
             <span className="text-[11px] font-mono text-purple-400 uppercase tracking-widest block mb-2">
-              ✦ {lang === 'ar' ? 'المتجر والمصنوعات الملموسة' : 'Physical Collection & Artifacts'}
+              ✦ {t('marketplace.badge', 'Physical Collection & Artifacts')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white uppercase tracking-tight">
-              {lang === 'ar' ? 'منتجات 3D جاهزة للطلب' : 'Ready-Made 3D Objects'}
+              {t('marketplace.heading', 'Ready-Made 3D Objects')}
             </h2>
           </div>
 
           {/* Touch-Scrollable Filter Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none [scrollbar-width:none]">
             {[
-              { id: 'all', label: 'All Items', ar: 'الكل' },
-              { id: 'lighting', label: 'Lighting', ar: 'إضاءة' },
-              { id: 'accessories', label: 'Desk & Tech', ar: 'إكسسوارات' },
-              { id: 'art', label: 'Art & Sculptures', ar: 'تحف وفنون' },
-              { id: 'decor', label: 'Home Decor', ar: 'ديكور' },
+              { id: 'all', textKey: 'marketplace.filterAll', fallback: 'All Items' },
+              { id: 'lighting', textKey: 'marketplace.filterLighting', fallback: 'Lighting' },
+              { id: 'accessories', textKey: 'marketplace.filterAccessories', fallback: 'Desk & Tech' },
+              { id: 'art', textKey: 'marketplace.filterArt', fallback: 'Art & Sculptures' },
+              { id: 'decor', textKey: 'marketplace.filterDecor', fallback: 'Home Decor' },
             ].map((cat) => (
               <button
                 key={cat.id}
@@ -185,7 +168,7 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
                     : 'bg-white/5 text-white/60 hover:text-white border border-white/10'
                 }`}
               >
-                {lang === 'ar' ? cat.ar : cat.label}
+                {t(cat.textKey, cat.fallback)}
               </button>
             ))}
           </div>
@@ -194,13 +177,13 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
         {/* Loading State */}
         {loading ? (
           <div className="py-24 text-center text-xs font-mono text-white/40 animate-pulse">
-            Loading live 3D inventory...
+            {t('marketplace.loadingText', 'Loading live 3D inventory...')}
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-20 text-center rounded-2xl border border-white/5 bg-white/[0.01]">
             <span className="text-2xl block mb-2">🧊</span>
             <span className="text-xs font-mono text-white/40">
-              No products available in this category.
+              {t('marketplace.emptyText', 'No products available in this category.')}
             </span>
           </div>
         ) : (
@@ -230,7 +213,7 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
                   {/* Stock Status Badge (Top-Left) */}
                   {!product.is_in_stock && (
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-950/80 backdrop-blur-md border border-rose-500/40 text-[9px] font-mono font-bold text-rose-300 uppercase tracking-wider">
-                      Made to Order
+                      {t('marketplace.madeToOrderBadge', 'Made to Order')}
                     </div>
                   )}
 
@@ -240,7 +223,7 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
                       <span className="text-emerald-400">{product.price}</span>
                     ) : (
                       <span className="text-white/60 text-[10px] tracking-wider uppercase">
-                        Price on Request
+                        {t('marketplace.priceOnRequestBadge', 'Price on Request')}
                       </span>
                     )}
                   </div>
@@ -273,12 +256,8 @@ export default function MarketplaceGrid({ onSelectProduct }: MarketplaceGridProp
                   <span>💬</span>
                   <span>
                     {product.is_in_stock
-                      ? lang === 'ar'
-                        ? 'اطلب عبر واتساب'
-                        : 'Order on WhatsApp'
-                      : lang === 'ar'
-                        ? 'طلب تصنيع مخصص ↗'
-                        : 'Request Backorder ↗'}
+                      ? t('marketplace.orderButton', 'Order on WhatsApp')
+                      : t('marketplace.backorderButton', 'Request Backorder ↗')}
                   </span>
                 </button>
               </motion.div>

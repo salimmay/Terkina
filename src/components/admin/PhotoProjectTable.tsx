@@ -2,8 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
+import { Trash2, Pencil, Plus, Images } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import StatusDropdown, { ProjectStatus } from './StatusDropdown';
+import { triggerRevalidate } from '@/lib/revalidate';
+import { logTrashItem } from '@/lib/trash';
+import { PageHeader, Card, Badge, Button, EmptyState, ConfirmDialog } from '@/components/admin/ui';
 
 interface PhotoProjectItem {
   id: string;
@@ -42,9 +47,12 @@ export default function PhotoProjectTable({
 }: PhotoProjectTableProps) {
   const [projects, setProjects] = useState<PhotoProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<PhotoProjectItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const supabase = createClient();
 
-  const isAmber = accentColor === 'amber';
+  const badgeTone = accentColor === 'amber' ? 'amber' : 'cyan';
+  const targetRoute = platform === 'MED_ART' ? '/weddings' : '/production';
 
   const fetchProjects = async () => {
     setLoading(true);
@@ -87,12 +95,8 @@ export default function PhotoProjectTable({
             id: item.id,
             title: item.title,
             category:
-              platform === 'MED_ART'
-                ? item.description?.match(/\[Platform:[^\]]*Category:\s*([^\]]+)\]/)?.[1]?.trim() ||
-                  'Bridal & Weddings'
-                : item.description?.match(/\[Platform:[^\]]*Category:\s*([^\]]+)\]/)?.[1]?.trim() ||
-                  'Commercial & Ads',
-            platform,
+              item.description?.match(/\[Platform:[^\]]*Category:\s*([^\]]+)\]/)?.[1]?.trim() ||
+              (platform === 'MED_ART' ? 'Bridal & Weddings' : 'Commercial & Ads'),
             status: item.status,
             sort_order: item.sort_order,
             cover_image_url: item.cover_image_url || '/placeholder.jpg',
@@ -102,7 +106,11 @@ export default function PhotoProjectTable({
           }))
       );
     } else if (error) {
-      console.error('Failed to load albums:', error.message);
+      if (error.code === 'PGRST205') {
+        console.warn('Supabase table `photo_project` not yet created. Run `supabase/complete_setup.sql`.');
+      } else {
+        console.error('Failed to load albums:', error.message);
+      }
     }
     setLoading(false);
   };
@@ -112,105 +120,124 @@ export default function PhotoProjectTable({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [platform]);
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete album "${name}"?`)) {
-      // Soft-delete per schema (30-day recovery window)
-      const { error } = await supabase
-        .from('photo_project')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', id);
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
 
-      if (!error) {
-        setProjects((prev) => prev.filter((p) => p.id !== id));
-      } else {
-        alert('Failed to delete album');
-      }
+    // Capture every Cloudinary asset this album owns before soft-deleting it,
+    // so the Trash entry knows exactly what to purge if it's ever emptied.
+    const { data: galleryRows } = await supabase
+      .from('photo_gallery')
+      .select('image_url')
+      .eq('project_id', pendingDelete.id);
+    const cloudinaryUrls = [
+      pendingDelete.cover_image_url,
+      ...((galleryRows || []) as Array<{ image_url: string }>).map((g) => g.image_url),
+    ];
+
+    // Soft-delete per schema (30-day recovery window)
+    const { error } = await supabase
+      .from('photo_project')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', pendingDelete.id);
+    setDeleting(false);
+
+    if (error) {
+      toast.error('Failed to delete album');
+      return;
     }
+
+    const logged = await logTrashItem({
+      item_type: 'album',
+      title: pendingDelete.title,
+      preview_url: pendingDelete.cover_image_url,
+      platform,
+      source_id: pendingDelete.id,
+      restore_payload: { mode: 'soft_delete_undo', table: 'photo_project' },
+      cloudinary_urls: cloudinaryUrls,
+    });
+
+    setProjects((prev) => prev.filter((p) => p.id !== pendingDelete.id));
+    triggerRevalidate(targetRoute);
+    if (logged) {
+      toast.success(`"${pendingDelete.title}" moved to trash.`);
+    } else {
+      toast.warning(
+        `"${pendingDelete.title}" was hidden from the site, but could not be added to Trash — run supabase/trash_items.sql to enable recovery.`
+      );
+    }
+    setPendingDelete(null);
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 text-white">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10">
-        <div>
-          <h1
-            className={`text-2xl font-black uppercase tracking-wider ${
-              isAmber ? 'text-amber-300' : 'text-cyan-300'
-            }`}
-          >
-            {title}
-          </h1>
-          <p className="text-xs font-mono text-white/50 mt-1">{subtitle}</p>
-        </div>
+    <div>
+      <PageHeader
+        title={title}
+        description={subtitle}
+        action={
+          <Link href={createHref}>
+            <Button variant="primary" size="sm" icon={<Plus className="w-3.5 h-3.5" />}>
+              Create album
+            </Button>
+          </Link>
+        }
+      />
 
-        <Link
-          href={createHref}
-          className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-lg text-black ${
-            isAmber ? 'bg-amber-400 hover:bg-amber-300' : 'bg-cyan-400 hover:bg-cyan-300'
-          }`}
-        >
-          + Create New Album
-        </Link>
-      </div>
-
-      {/* Table Container */}
-      <div className="rounded-2xl border border-white/10 bg-[#08070d]/80 backdrop-blur-xl overflow-hidden shadow-2xl">
-        <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between text-xs font-mono text-white/40">
-          <span>Active Album Records</span>
-          <span>Total Albums: {projects.length}</span>
+      <Card padded={false}>
+        <div className="px-5 py-3 border-b border-zinc-800 flex items-center justify-between text-xs text-zinc-500">
+          <span>Active album records</span>
+          <span>{projects.length} albums</span>
         </div>
 
         {loading ? (
-          <div className="py-20 text-center text-xs font-mono text-white/40 animate-pulse">
-            Loading album inventory...
-          </div>
+          <div className="py-16 text-center text-xs text-zinc-500">Loading album inventory...</div>
         ) : projects.length === 0 ? (
-          <div className="py-20 text-center text-xs font-mono text-white/40">
-            No albums found. Click "+ Create New Album" to upload your first project.
-          </div>
+          <EmptyState
+            icon={Images}
+            title="No albums yet"
+            description="Create your first album to publish it to the live gallery."
+            action={
+              <Link href={createHref}>
+                <Button variant="primary" size="sm" icon={<Plus className="w-3.5 h-3.5" />}>
+                  Create album
+                </Button>
+              </Link>
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-white/[0.02] border-b border-white/10 text-white/40 uppercase text-[10px] tracking-wider">
+            <table className="w-full text-left text-sm">
+              <thead className="text-zinc-500 text-xs uppercase tracking-wide border-b border-zinc-800">
                 <tr>
-                  <th className="py-3.5 px-6">Cover & Album Title</th>
-                  <th className="py-3.5 px-6">Frames Count</th>
-                  <th className="py-3.5 px-6">Status</th>
-                  <th className="py-3.5 px-6 text-right">Actions</th>
+                  <th className="py-2.5 px-5 font-medium">Album</th>
+                  <th className="py-2.5 px-5 font-medium">Frames</th>
+                  <th className="py-2.5 px-5 font-medium">Status</th>
+                  <th className="py-2.5 px-5 font-medium text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-zinc-800">
                 {projects.map((project) => (
-                  <tr key={project.id} className="hover:bg-white/[0.01] transition-colors">
-                    {/* Cover + Title */}
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3.5">
-                        <div className="w-12 h-14 rounded-lg overflow-hidden bg-neutral-900 border border-white/10 shrink-0">
+                  <tr key={project.id} className="hover:bg-zinc-800/30 transition-colors">
+                    <td className="py-3 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-13 rounded-md overflow-hidden bg-zinc-800 border border-zinc-700 shrink-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={project.cover_image_url}
+                            src={project.cover_image_url || '/placeholder.jpg'}
                             alt={project.title}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-white text-sm">{project.title}</span>
-                          <span className="text-white/40 text-[11px] line-clamp-1 max-w-sm">
-                            {project.description}
-                          </span>
+                        <div className="min-w-0">
+                          <div className="font-medium text-white truncate">{project.title}</div>
+                          <Badge tone={badgeTone} className="mt-1">{project.category}</Badge>
                         </div>
                       </div>
                     </td>
 
-                    {/* Frames Count */}
-                    <td className="py-4 px-6">
-                      <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-white/70 text-[10px]">
-                        📸 {project.frames_count} Frames
-                      </span>
-                    </td>
+                    <td className="py-3 px-5 text-zinc-400">{project.frames_count} frames</td>
 
-                    {/* Interactive Status Dropdown */}
-                    <td className="py-4 px-6">
+                    <td className="py-3 px-5">
                       <StatusDropdown
                         projectId={project.id}
                         initialStatus={project.status}
@@ -219,19 +246,27 @@ export default function PhotoProjectTable({
                           setProjects((prev) =>
                             prev.map((p) => (p.id === project.id ? { ...p, status: newStatus } : p))
                           );
+                          triggerRevalidate(targetRoute);
                         }}
                       />
                     </td>
 
-                    {/* Actions */}
-                    <td className="py-4 px-6 text-right">
-                      <div className="inline-flex items-center gap-2">
+                    <td className="py-3 px-5 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <Link
+                          href={`/admin/weddings/${project.id}/edit`}
+                          className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors inline-flex"
+                          title="Edit album"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
                         <button
                           type="button"
-                          onClick={() => handleDelete(project.id, project.title)}
-                          className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors cursor-pointer"
+                          onClick={() => setPendingDelete(project)}
+                          className="p-1.5 rounded-md text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
+                          title="Delete album"
                         >
-                          🗑️
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -241,7 +276,17 @@ export default function PhotoProjectTable({
             </table>
           </div>
         )}
-      </div>
+      </Card>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={`Delete "${pendingDelete?.title}"?`}
+        description="The album will be moved to trash and recoverable for 30 days, then permanently removed."
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

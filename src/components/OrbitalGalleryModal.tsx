@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useT } from '@/lib/translations/TranslationsProvider';
 
 export interface GalleryImage {
   id: string;
@@ -28,6 +30,8 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
   const [angle, setAngle] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const requestRef = useRef<number>(0);
+  const focusTrapRef = useFocusTrap(isOpen && !!album);
+  const t = useT();
 
   const images = album?.images || [];
   const total = images.length;
@@ -93,21 +97,25 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
   return (
     <AnimatePresence>
       <motion.div
+        ref={focusTrapRef}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="orbital-gallery-title"
         className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black/90 backdrop-blur-3xl"
       >
         {/* ================= TOP CONTROLS & ALBUM INFO ================= */}
         <div className="absolute top-8 left-8 z-30 flex flex-col gap-1 select-none pointer-events-none">
           <span className="text-[10px] font-mono tracking-widest text-amber-400 uppercase">
-            {album.category || 'Portfolio Album'}
+            {album.category || t('orbitalGallery.defaultCategory', 'Portfolio Album')}
           </span>
-          <h2 className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
+          <h2 id="orbital-gallery-title" className="text-xl md:text-2xl font-black text-white uppercase tracking-tight">
             {album.title}
           </h2>
           <span className="text-xs font-mono text-white/40">
-            {total} Frames • Hover to pause, click to expand
+            {total} {t('orbitalGallery.framesHintSuffix', 'Frames • Hover to pause, click to expand')}
           </span>
         </div>
 
@@ -118,7 +126,7 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
           aria-label="Close Album"
         >
           <span>✕</span>
-          <span>Close Album</span>
+          <span>{t('orbitalGallery.closeButton', 'Close Album')}</span>
         </button>
 
         {/* Heavy radial vignette – darkens everything outside the central cluster */}
@@ -178,12 +186,16 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
               >
                 {/* Photo Card */}
                 <div className="relative w-20 sm:w-24 md:w-28 aspect-[3/4] rounded-lg overflow-hidden bg-neutral-900 border border-white/15 group-hover:border-white/60 transition-colors duration-300 shadow-2xl group-hover:shadow-white/10">
-                  <img
-                    src={img.url}
-                    alt={img.title || 'Gallery image'}
-                    className="w-full h-full object-cover pointer-events-none group-hover:brightness-110 transition-all duration-300"
-                    loading="lazy"
-                  />
+                  {img.url ? (
+                    <img
+                      src={img.url}
+                      alt={img.title || 'Gallery image'}
+                      className="w-full h-full object-cover pointer-events-none group-hover:brightness-110 transition-all duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-white/30 text-[8px]">N/A</div>
+                  )}
                   {/* Subtle glass reflection overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2.5">
                     <span className="text-[10px] font-mono text-white/90 truncate">
@@ -214,7 +226,7 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
                 aria-label="Back to Orbit"
               >
                 <span>✕</span>
-                <span>Back to Orbit</span>
+                <span>{t('orbitalGallery.backButton', 'Back to Orbit')}</span>
               </motion.button>
 
               {/* 80-85% Scale Image Frame */}
@@ -236,7 +248,7 @@ export default function OrbitalGalleryModal({ album, isOpen, onClose }: OrbitalG
 
                 {/* Bottom Caption Pill */}
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-6 py-2 rounded-full bg-black/70 backdrop-blur-md border border-white/15 text-xs font-mono text-white/80 uppercase tracking-widest flex items-center gap-4 pointer-events-none select-none max-w-[90%] truncate">
-                  <span className="truncate">{activeImage.title || 'Untitled Shoot Frame'}</span>
+                  <span className="truncate">{activeImage.title || t('orbitalGallery.defaultFrameTitle', 'Untitled Shoot Frame')}</span>
                   <span className="text-white/30">•</span>
                   <span className="text-amber-300 shrink-0">Med Art & Terkina Studio</span>
                 </div>

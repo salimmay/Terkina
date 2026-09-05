@@ -1,6 +1,6 @@
-Project Requirements Document (PRD) — Version 1.0
-TERKINA Ecosystem: Dual Creative Studios & Master CRM
-1. Project Overview
+# Project Requirements Document (PRD) — Version 1.0
+## TERKINA Ecosystem: Dual Creative Studios & Master CRM
+### 1. Project Overview
 
 TERKINA is a full-stack, dynamic multimedia agency platform powered by a unified Next.js (App Router) + Supabase + Cloudinary architecture. The ecosystem powers two distinct digital platforms managed through a single master visual CRM dashboard:
 
@@ -135,7 +135,7 @@ TERKINA is a full-stack, dynamic multimedia agency platform powered by a unified
 
     Floating Magnetic Lens: A circular glass badge tracking cursor coordinates on desktop, displaying ENTER MED ART ↗ (amber) or ENTER TERKINA ↗ (cyan).
 
-4.2. Photography Album Showcase: 360° Orbital Constellation Modal
+### 4.2 Photography Album Showcase – 360° Orbital Constellation Modal
 
     Trigger: Clicking any album card on /weddings or /production.
 
@@ -159,48 +159,14 @@ TERKINA is a full-stack, dynamic multimedia agency platform powered by a unified
 
         ) around a central brand emblem.
 
-        Cards feature depth-based scaling (
-
-                
-        0.75×
-        0.75×
-
-              
-
-        back to
-
-                
-        1.05×
-        1.05×
-
-              
-
-        front) and depth opacity (
-
-                
-        0.45
-        0.45
-
-              
-
-        back to
-
-                
-        1.0
-        1.0
-
-              
-
-        front).
-
-        Surrounding screen is darkened with deep backdrop blur (backdrop-blur-3xl) and radial vignette.
-
-    Hover State: Pauses rotation loop, boosts z-index to top, and zooms card by
-
-            
-    40%
-    40%
-
+        Cards feature depth‑based scaling:
+        - Back scaling: **0.75×**
+        - Front scaling: **1.05×**
+        Depth opacity:
+        - Back opacity: **0.45**
+        - Front opacity: **1.0**
+        Surrounding screen is darkened with deep backdrop blur (`backdrop-blur-3xl`) and a radial vignette.
+        **Hover State:** rotation pauses, z‑index rises, and the card zooms forward (~40% increase).
           
 
     with spring physics.

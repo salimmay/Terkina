@@ -1,0 +1,148 @@
+/* Splash loader echoing the TERKINA mark: the L-bracket frame wipes in around
+   a glowing bulb watermark, with the wordmark fading up beneath it. */
+
+.container {
+  position: fixed;
+  inset: 0;
+  background-color: #09090b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: 'Times New Roman', Times, serif;
+  transition: opacity 500ms ease, visibility 500ms ease;
+}
+
+.leaving {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.box {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+/* Glowing background lightbulb */
+.bulb {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  stroke: rgba(255, 255, 255, 0.12);
+  animation: bulbGlow 2s infinite ease-in-out alternate;
+}
+
+@keyframes bulbGlow {
+  0% {
+    stroke: rgba(255, 255, 255, 0.05);
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+  100% {
+    stroke: rgba(255, 255, 255, 0.35);
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.2));
+  }
+}
+
+/* Animated corner bracket frame */
+.bracket {
+  position: absolute;
+  inset: 0;
+  border-left: 3px solid #ffffff;
+  border-bottom: 3px solid #ffffff;
+  animation: frameReveal 1.2s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+}
+
+@keyframes frameReveal {
+  0% {
+    clip-path: polygon(0 100%, 0 100%, 0 100%, 0 100%);
+  }
+  100% {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+  }
+}
+
+/* Brand wordmark */
+.title {
+  color: #ffffff;
+  font-size: 2.2rem;
+  letter-spacing: 4px;
+  font-weight: 700;
+  display: block;
+  opacity: 0;
+  animation: fadeInUp 0.8s 0.4s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cycling service tags — the track scrolls one full row at a time, so each
+   row must stay exactly --row tall for the offsets to line up. */
+.tagViewport {
+  --row: 20px;
+  position: absolute;
+  top: 24px;
+  right: 20px;
+  height: var(--row);
+  overflow: hidden;
+  text-align: right;
+}
+
+/* One full pass must fit inside the loader's ~1.8s minimum, otherwise only the
+   first word is ever seen before the splash fades out. */
+.tagTrack {
+  animation: cycleTags 2.1s infinite;
+}
+
+.tagItem {
+  display: block;
+  height: var(--row);
+  line-height: var(--row);
+  color: #c5a059; /* accent gold from the logo */
+  font-family: var(--font-body), monospace, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+
+/* Percentages here are of the track's own height (3 rows), so one step up is
+   exactly one row — and it stays correct if --row ever changes. */
+@keyframes cycleTags {
+  0%, 28% { transform: translateY(0); }
+  33%, 61% { transform: translateY(-33.3333%); }
+  66%, 94% { transform: translateY(-66.6667%); }
+  100% { transform: translateY(0); }
+}
+
+/* Respect reduced-motion: show the finished state, skip the movement. */
+@media (prefers-reduced-motion: reduce) {
+  .bulb,
+  .bracket,
+  .title,
+  .tagTrack {
+    animation: none;
+  }
+  .title {
+    opacity: 1;
+  }
+  .bracket {
+    clip-path: none;
+  }
+}
