@@ -3,12 +3,13 @@ import type { Locale } from '@/lib/locale';
 
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://terkina.com';
 
-export type PageKey = 'home' | 'weddings' | 'production' | 'threeD';
+export type PageKey = 'home' | 'weddings' | 'weddingPacks' | 'production' | 'threeD';
 
 /** Unprefixed (English) path for each page. */
 const PAGE_PATHS: Record<PageKey, string> = {
   home: '',
   weddings: '/weddings',
+  weddingPacks: '/weddings/packs',
   production: '/production',
   threeD: '/3d',
 };
@@ -35,6 +36,11 @@ export const SEO_COPY: Record<Locale, Record<PageKey, Copy>> = {
       description:
         'Med Art films Tunisian weddings in cinematic detail — editorial bridal portraits, candid ceremony coverage and 4K wedding films. View albums and book on WhatsApp.',
     },
+    weddingPacks: {
+      title: 'Wedding Photography Packages & Prices in Tunisia | Med Art',
+      description:
+        'Med Art wedding packages with transparent pricing: photo and video coverage, cinematic two-camera options and à-la-carte services. Build your package and send it on WhatsApp.',
+    },
     production: {
       title: 'Commercial Video Production & Brand Campaigns | Tunisia',
       description:
@@ -57,6 +63,11 @@ export const SEO_COPY: Record<Locale, Record<PageKey, Copy>> = {
       description:
         'Med Art filme votre mariage en Tunisie avec une approche cinématographique : portraits de mariée, cérémonie et film 4K. Découvrez nos albums et réservez sur WhatsApp.',
     },
+    weddingPacks: {
+      title: 'Packs & Tarifs Photographe Mariage Tunisie | Med Art',
+      description:
+        'Découvrez les packs mariage Med Art et leurs tarifs : couverture photo et vidéo, formules cinématiques 2 caméras et services à la carte. Composez votre pack et envoyez-le sur WhatsApp.',
+    },
     production: {
       title: 'Production Audiovisuelle & Publicitaire | Tunisie',
       description:
@@ -78,6 +89,11 @@ export const SEO_COPY: Record<Locale, Record<PageKey, Copy>> = {
       title: 'تصوير أعراس في تونس | ميد آرت للتصوير السينمائي',
       description:
         'ميد آرت توثّق زفافك في تونس بلمسة سينمائية: جلسات تصوير العروس، تغطية الحفل، وأفلام زفاف بجودة 4K. تصفّح الألبومات واحجز عبر واتساب.',
+    },
+    weddingPacks: {
+      title: 'باقات وأسعار تصوير الأعراس في تونس | ميد آرت',
+      description:
+        'باقات ميد آرت لتصوير الأعراس بأسعار واضحة: تغطية فوتوغرافية وفيديو، صيغ سينمائية بكاميرتين، وخدمات إضافية. صمّم باقتك وأرسلها عبر واتساب.',
     },
     production: {
       title: 'إنتاج إعلاني وتصوير تجاري في تونس | تيركينا',

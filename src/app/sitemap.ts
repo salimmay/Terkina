@@ -5,6 +5,7 @@ import { SITE_URL } from '@/lib/seo';
 const PAGES: Array<{ path: string; priority: number }> = [
   { path: '/', priority: 1.0 },
   { path: '/weddings', priority: 0.9 },
+  { path: '/weddings/packs', priority: 0.9 },
   { path: '/production', priority: 0.9 },
   { path: '/3d', priority: 0.9 },
 ];

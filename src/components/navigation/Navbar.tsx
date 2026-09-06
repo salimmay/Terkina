@@ -4,15 +4,18 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { Volume2, VolumeX } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 import { LOCALES, localizedPath, withLocale } from '@/context/LocaleContext';
 import { useSiteSettings } from '@/lib/useSiteSettings';
+import { useSound } from '@/context/SoundContext';
 import { useT } from '@/lib/translations/TranslationsProvider';
 
 export default function Navbar() {
   const { lang, dir } = useLanguage();
   const { whatsappNumber, logoUrl } = useSiteSettings();
   const t = useT();
+  const { enabled: soundOn, toggle: toggleSound } = useSound();
   const pathname = usePathname();
   const router = useRouter();
   const is3D = pathname.includes('3d');
@@ -165,6 +168,23 @@ export default function Navbar() {
 
           {/* ================= RIGHT ACTION ZONE ================= */}
           <div className="flex items-center gap-3">
+            {/* Shutter sound toggle — off by default, choice remembered */}
+            <button
+              type="button"
+              onClick={toggleSound}
+              data-no-shutter
+              aria-pressed={soundOn}
+              title={soundOn ? 'Turn shutter sound off' : 'Turn shutter sound on'}
+              aria-label={soundOn ? 'Turn shutter sound off' : 'Turn shutter sound on'}
+              className={`w-8 h-8 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${
+                soundOn
+                  ? 'bg-white/10 border-white/25 text-white'
+                  : 'bg-white/[0.03] border-white/10 text-white/40 hover:text-white/70'
+              }`}
+            >
+              {soundOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+            </button>
+
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-full p-1 text-[11px] font-mono">
               {LOCALES.map((locale) => (

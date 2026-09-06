@@ -8,6 +8,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { CursorProvider } from '@/components/ui/CustomCursor';
 import { TranslationsProvider } from '@/lib/translations/TranslationsProvider';
 import BrandLoader from '@/components/ui/BrandLoader';
+import { SoundProvider } from '@/context/SoundContext';
 import Navbar from '@/components/navigation/Navbar';
 
 interface ClientShellProps {
@@ -29,6 +30,9 @@ export default function ClientShell({ children }: ClientShellProps) {
 
   return (
     <TranslationsProvider>
+      {/* Shutter click SFX — public routes only. Clicking through the CRM all
+          day with a camera shutter on every button would be maddening. */}
+      <SoundProvider active={!isCrmRoute}>
       <CursorProvider>
         {/* Brand splash on page load — skipped inside the CRM so admins aren't
             gated behind an animation on every refresh while editing. */}
@@ -69,6 +73,7 @@ export default function ClientShell({ children }: ClientShellProps) {
           </motion.div>
         </AnimatePresence>
       </CursorProvider>
+      </SoundProvider>
     </TranslationsProvider>
   );
 }

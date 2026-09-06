@@ -104,6 +104,28 @@ export const TRANSLATION_REGISTRY: TranslationField[] = [
   { key: 'customPrint.detailsPlaceholder', group: '3D Lab — Custom Print', label: 'Details field placeholder', en: 'Describe dimensions (e.g. 15cm height), quantity, mechanical requirements, or color preferences...', fr: 'Décrivez les dimensions (ex. 15cm de hauteur), la quantité, les exigences mécaniques ou préférences de couleur...', ar: 'أخبرنا عن أبعاد المجسم (مثال: ارتفاع 15 سم)، الكمية المطلوبة، وأي متطلبات خاصة...' },
   { key: 'customPrint.buttonText', group: '3D Lab — Custom Print', label: 'Submit button', en: 'Submit Custom Request to WhatsApp', fr: 'Envoyer la Demande sur WhatsApp', ar: 'إرسال طلب الطباعة عبر واتساب' },
 
+  // ====================== MED ART — PACK BUILDER ============================
+  { key: 'packs.pageBadge', group: 'Med Art — Pack Builder', label: 'Badge', en: 'MED ART — PACKAGES', fr: 'MED ART — NOS PACKS', ar: 'ميد آرت — الباقات' },
+  { key: 'packs.pageTitle', group: 'Med Art — Pack Builder', label: 'Page title (H1)', en: 'Build your wedding package', fr: 'Composez votre pack sur mesure', ar: 'صمّم باقة زفافك' },
+  { key: 'packs.pageIntro', group: 'Med Art — Pack Builder', label: 'Intro paragraph', en: 'Pick a package from each category that interests you — the total updates as you go. When your selection is ready, send it straight to us.', fr: 'Choisissez un pack dans chaque catégorie qui vous intéresse — le total se met à jour automatiquement. Une fois votre sélection prête, envoyez-la nous directement.', ar: 'اختر باقة من كل قسم يهمّك — يتحدّث المجموع تلقائيًا. وعند اكتمال اختيارك، أرسله لنا مباشرة.' },
+  { key: 'packs.pickOne', group: 'Med Art — Pack Builder', label: 'Category tag: choose one', en: 'Choose one', fr: '1 pack au choix', ar: 'اختر باقة واحدة' },
+  { key: 'packs.extras.label', group: 'Med Art — Pack Builder', label: 'Category: à la carte', en: 'À la carte services', fr: 'Services à la carte', ar: 'خدمات إضافية' },
+  { key: 'packs.extras.tag', group: 'Med Art — Pack Builder', label: 'Category tag: à la carte', en: 'Add as many as you like', fr: 'Plusieurs choix possibles', ar: 'يمكن اختيار أكثر من خدمة' },
+  { key: 'packs.standard.label', group: 'Med Art — Pack Builder', label: 'Category: standard', en: 'Standard Package', fr: 'Pack Standard', ar: 'الباقة العادية' },
+  { key: 'packs.cine.label', group: 'Med Art — Pack Builder', label: 'Category: cinematic', en: 'Cinematic Standard Package', fr: 'Pack Standard Cinématique', ar: 'الباقة العادية السينمائية' },
+  { key: 'packs.cine.note', group: 'Med Art — Pack Builder', label: 'Cinematic category note', en: 'Same formula as the Standard Package, filmed with two cameras (C1: wide / C2: tight).', fr: 'Même formule que le Pack Standard, filmée avec 2 caméras (C1 : plan large / C2 : plan serré).', ar: 'نفس صيغة الباقة العادية، مع التصوير بكاميرتين (الأولى لقطة واسعة / الثانية لقطة قريبة).' },
+  { key: 'packs.wedding.label', group: 'Med Art — Pack Builder', label: 'Category: wedding', en: 'Wedding Package', fr: 'Wedding Package', ar: 'باقة الزفاف' },
+  { key: 'packs.clear', group: 'Med Art — Pack Builder', label: 'Clear selection link', en: 'Clear selection', fr: 'Effacer la sélection', ar: 'مسح الاختيار' },
+  { key: 'packs.empty', group: 'Med Art — Pack Builder', label: 'Summary: nothing selected', en: 'No selection yet', fr: 'Aucune sélection', ar: 'لا يوجد اختيار بعد' },
+  { key: 'packs.total', group: 'Med Art — Pack Builder', label: 'Summary: total label', en: 'Total', fr: 'Total', ar: 'المجموع' },
+  { key: 'packs.copy', group: 'Med Art — Pack Builder', label: 'Copy button', en: 'Copy', fr: 'Copier', ar: 'نسخ' },
+  { key: 'packs.copied', group: 'Med Art — Pack Builder', label: 'Copy button (confirmed)', en: 'Copied ✓', fr: 'Copié ✓', ar: 'تم النسخ ✓' },
+  { key: 'packs.send', group: 'Med Art — Pack Builder', label: 'Send button', en: 'Send my selection', fr: 'Envoyer ma sélection', ar: 'إرسال اختياري' },
+  { key: 'packs.loading', group: 'Med Art — Pack Builder', label: 'Loading state', en: 'Loading packages...', fr: 'Chargement des packs...', ar: 'جاري تحميل الباقات...' },
+  { key: 'packs.emptyState', group: 'Med Art — Pack Builder', label: 'No packs published', en: 'No packages published yet.', fr: 'Aucun pack publié pour le moment.', ar: 'لا توجد باقات منشورة بعد.' },
+  { key: 'packs.navLink', group: 'Med Art — Pack Builder', label: 'Link from weddings gallery', en: 'View packages & pricing', fr: 'Voir nos packs & tarifs', ar: 'اطّلع على الباقات والأسعار' },
+  { key: 'whatsapp.packSelection.template', group: 'WhatsApp Templates', label: 'Pack builder selection message', en: '*My selection — Med Art* ✨\n\n{{lines}}\n\n*Total:* {{total}}', fr: '*Ma sélection — Med Art* ✨\n\n{{lines}}\n\n*Total :* {{total}}', ar: '*اختياري — ميد آرت* ✨\n\n{{lines}}\n\n*المجموع:* {{total}}' },
+
   // ======================= WEDDINGS / PRODUCTION PAGES ======================
   { key: 'weddingsPage.badge', group: 'Weddings Page', label: 'Badge', en: 'MED ART CINEMA & STILLS', fr: 'CINÉMATOGRAPHIE MED ART', ar: 'سينما واستوديو ميد آرت' },
   { key: 'weddingsPage.title', group: 'Weddings Page', label: 'Title', en: 'Luxury Wedding Stories', fr: "Récits de Mariages d'Exception", ar: 'قصص الأعراس الفاخرة' },

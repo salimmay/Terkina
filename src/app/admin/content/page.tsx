@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
-import { ChevronDown, Search, MessageCircle, BarChart3, Globe, Clapperboard } from 'lucide-react';
+import { ChevronDown, Search, MessageCircle, BarChart3, Globe, Clapperboard, KeyRound } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { TRANSLATION_REGISTRY, TRANSLATION_GROUPS, TranslationField } from '@/lib/translations/registry';
 import { useTranslationsAdmin } from '@/lib/translations/TranslationsProvider';
 import MediaUploader from '@/components/admin/MediaUploader';
+import AccountSecurity from '@/components/admin/AccountSecurity';
 import { FALLBACK_HERO_MED_ART, FALLBACK_HERO_TERKINA, FALLBACK_LOGO } from '@/lib/useSiteSettings';
 import { PageHeader, Card, CardHeader, Button, Label, Input, Textarea } from '@/components/admin/ui';
 
@@ -28,9 +29,10 @@ const TABS = [
   { id: 'hero' as const, label: 'Branding & Media', icon: Clapperboard },
   { id: 'metrics' as const, label: 'Animated Metrics', icon: BarChart3 },
   { id: 'text' as const, label: 'Website Text', icon: Globe },
+  { id: 'account' as const, label: 'Account', icon: KeyRound },
 ];
 
-type TabId = 'general' | 'hero' | 'metrics' | 'text';
+type TabId = 'general' | 'hero' | 'metrics' | 'text' | 'account';
 
 export default function AdminContentPage() {
   const [activeTab, setActiveTab] = useState<TabId>('general');
@@ -343,6 +345,9 @@ export default function AdminContentPage() {
 
       {/* ================= TAB 3: WEBSITE TEXT (EN/FR/AR) ================= */}
       {activeTab === 'text' && <WebsiteTextEditor />}
+
+      {/* ================= TAB: ACCOUNT SECURITY ================= */}
+      {activeTab === 'account' && <AccountSecurity />}
     </div>
   );
 }

@@ -3,17 +3,18 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Sparkles, MessageCircle } from 'lucide-react';
 import { CATEGORIES_WEDDINGS } from '@/lib/categories';
-import { useLocale } from '@/context/LocaleContext';
+import { useLocale, withLocale } from '@/context/LocaleContext';
 import { useT } from '@/lib/translations/TranslationsProvider';
 import OrbitalGalleryModal, { AlbumData } from '@/components/OrbitalGalleryModal';
 import { usePhotoProjects, LivePhotoProject } from '@/lib/usePhotoProjects';
 import JsonLd from '@/components/seo/JsonLd';
 
 export default function WeddingsPage() {
-  const { dir } = useLocale();
+  const { dir, locale } = useLocale();
+  const reduceMotion = useReducedMotion();
   const t = useT();
 
   const [activeCategory, setActiveCategory] = useState('All');
@@ -68,19 +69,69 @@ export default function WeddingsPage() {
 
       {/* Hero Header */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 pt-28 sm:pt-36 pb-8 sm:pb-12">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] sm:text-xs font-mono text-amber-300 uppercase tracking-widest mb-4">
-          ✨ {t('weddingsPage.badge', 'MED ART CINEMA & STILLS')}
+        {/* Stacks on mobile; on desktop the CTA moves to the right of the
+            title block, filling header space that would otherwise sit empty. */}
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 lg:gap-10">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-[10px] sm:text-xs font-mono text-amber-300 uppercase tracking-widest mb-4">
+              ✨ {t('weddingsPage.badge', 'MED ART CINEMA & STILLS')}
+            </div>
+
+            {/* Title — break-words prevents horizontal overflow */}
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-[1.05] break-words max-w-full">
+              {t('weddingsPage.title', 'Luxury Wedding Stories')}
+            </h1>
+
+            {/* Subtitle */}
+            <p className="mt-3 text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed max-w-xl break-words">
+              {t('weddingsPage.subtitle', 'Editorial bridal portraits, emotional candid rituals, and cinematic wedding films crafted across breathtaking destinations.')}
+            </p>
+          </div>
+
+          {/* Primary conversion CTA — a slow halo pulse draws the eye, and a
+              sheen sweeps the gold face every few seconds. Both loops stop
+              for visitors who ask for reduced motion. */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+            className="self-start shrink-0 lg:mt-1"
+          >
+            <motion.div
+              className="rounded-full"
+              animate={
+                reduceMotion
+                  ? undefined
+                  : {
+                      boxShadow: [
+                        '0 0 0 0 rgba(251,191,36,0.45)',
+                        '0 0 0 14px rgba(251,191,36,0)',
+                      ],
+                    }
+              }
+              transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.4, ease: 'easeOut' }}
+            >
+              <Link
+                href={withLocale('/weddings/packs', locale)}
+                className="group relative overflow-hidden inline-flex items-center gap-2 px-5 lg:px-7 py-2.5 lg:py-3.5 rounded-full bg-amber-400 hover:bg-amber-300 text-black font-bold text-xs uppercase tracking-wider transition-colors"
+              >
+                {!reduceMotion && (
+                  <motion.span
+                    aria-hidden="true"
+                    initial={{ x: '-140%' }}
+                    animate={{ x: '260%' }}
+                    transition={{ duration: 1.1, repeat: Infinity, repeatDelay: 2.8, ease: 'easeInOut' }}
+                    className="pointer-events-none absolute inset-y-0 w-1/3 -skew-x-12 bg-white/50 blur-[3px]"
+                  />
+                )}
+                <span className="relative z-10">{t('packs.navLink', 'View packages & pricing')}</span>
+                <span className="relative z-10 transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
+            </motion.div>
+          </motion.div>
         </div>
-
-        {/* Title — break-words prevents horizontal overflow */}
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black uppercase tracking-tight text-white leading-[1.05] break-words max-w-full">
-          {t('weddingsPage.title', 'Luxury Wedding Stories')}
-        </h1>
-
-        {/* Subtitle */}
-        <p className="mt-3 text-xs sm:text-sm md:text-base text-white/70 font-light leading-relaxed max-w-xl break-words">
-          {t('weddingsPage.subtitle', 'Editorial bridal portraits, emotional candid rituals, and cinematic wedding films crafted across breathtaking destinations.')}
-        </p>
 
         {/* ================= TOUCH-SCROLL FILTER BAR ================= */}
         <div className="mt-8 flex items-center gap-2 w-full overflow-x-auto pb-3 pt-1 scrollbar-none [scrollbar-width:none] [-ms-overflow-style:none]">
