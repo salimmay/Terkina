@@ -10,55 +10,11 @@
 ![Image](https://img.shields.io/badge/Cloudinary-CDN-blue?style=flat-square&logo=cloudinary)
 📸 Hero Visual
 
-![Image](./public/screenshot.png)
+![Image](./public/Home.png)
 
-    💡 Screenshot Tip: Replace ./public/screenshot.png with a clean, high-resolution (
+     desktop capture of the Living Video Split Hero showing the MED ART (Amber/Gold) and TERKINA (Cyan/Cobalt) halves with the glowing cursor trail in action.
 
-            
-    1920×1080
-    1920×1080
-
-          
-
-    ) desktop capture of the Living Video Split Hero showing the MED ART (Amber/Gold) and TERKINA (Cyan/Cobalt) halves with the glowing cursor trail in action.
-
-✨ Features
-
-    🎥 Living Video Split Hero: Full-viewport interactive gateway with ambient 60–120fps video loops, dynamic hover width expansion (
-
-            
-    65%/35%
-    65%/35%
-
-          
-
-    ), and a custom magnetic cursor lens.
-
-    🪐 360° Orbital Constellation Gallery: Compact 3D isometric rotating album carousel (
-
-            
-    35%
-    35%
-
-          
-
-    screen footprint) with depth scaling, hover deceleration (
-
-            
-    1.4×
-    1.4×
-
-          
-
-    ), and smooth
-
-            
-    85%
-    85%
-
-          
-
-    viewport lightbox expansion.
+    🪐 360° Orbital Constellation Gallery: Compact 3D isometric rotating album carousel
 
     🧊 Real-Time WebGL 3D Marketplace: Interactive 3D product catalog with live .glb binary model streaming via React Three Fiber, contact shadows, dynamic cursor rim lighting, and finish/color switchers.
 
@@ -102,6 +58,7 @@ Backend, Database & Media
 🚀 Getting Started
 
 Follow these steps to run the complete ecosystem locally.
+
 1. Prerequisites
 
 Ensure you have the following installed on your machine:
@@ -115,13 +72,13 @@ Ensure you have the following installed on your machine:
     A free Cloudinary account
 
 2. Clone the Repository
-code Bash
+   code Bash
 
 git clone https://github.com/your-username/terkina.git
 cd terkina
 
 3. Install Dependencies
-code Bash
+   code Bash
 
 npm install
 
@@ -136,49 +93,47 @@ Fill in your actual API credentials in .env.local:
 code Env
 
 # Base URL Configuration
+
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 
 # Supabase Database & Auth Keys
+
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret-key
 
 # Cloudinary Media Storage
+
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
 # On-Demand ISR Revalidation Secret
+
 REVALIDATION_SECRET=your_custom_revalidation_secret_key
 
 5. Database Setup (Supabase)
 
-    Open your Supabase Dashboard
+   Open your Supabase Dashboard
 
-            
-    →
-    →
+   →
+   →
 
-          
+   SQL Editor.
 
-    SQL Editor.
+   Run supabase/schema_v2.sql to initialize all tables, enums, triggers, and RLS policies.
 
-    Run supabase/schema_v2.sql to initialize all tables, enums, triggers, and RLS policies.
+   Run supabase/seed_real_data.sql to populate sample wedding albums, commercial shoots, and ready-made 3D .glb models.
 
-    Run supabase/seed_real_data.sql to populate sample wedding albums, commercial shoots, and ready-made 3D .glb models.
+   (Optional) Create your initial admin user in Supabase Authentication
 
-    (Optional) Create your initial admin user in Supabase Authentication
+   →
+   →
 
-            
-    →
-    →
-
-          
-
-    Users and assign the is_admin claim.
+   Users and assign the is_admin claim.
 
 6. Run the Local Development Server
-code Bash
+   code Bash
 
 npm run dev
 
@@ -195,40 +150,40 @@ code Text
 
 terkina/
 ├── .github/
-│   └── workflows/
-│       └── ci.yml               # GitHub Actions CI validation pipeline
+│ └── workflows/
+│ └── ci.yml # GitHub Actions CI validation pipeline
 ├── public/
-│   ├── videos/                  # Ambient background video reels (.mp4 / .webm)
-│   └── og-preview.jpg           # Static social share preview banner
+│ ├── videos/ # Ambient background video reels (.mp4 / .webm)
+│ └── og-preview.jpg # Static social share preview banner
 ├── src/
-│   ├── app/
-│   │   ├── (public)/            # Public front-end portfolio routes
-│   │   │   ├── page.tsx         # Home: Living Video Split Hero & WhatsApp Contact
-│   │   │   ├── weddings/        # Med Art Luxury Weddings Gallery
-│   │   │   ├── production/      # Terkina Commercial & Events Gallery
-│   │   │   └── 3d/              # 3D Engineering Lab & Physical Marketplace
-│   │   ├── admin/               # Master CRM Control Center
-│   │   │   ├── page.tsx         # Real-time KPIs & Activity Overview
-│   │   │   ├── weddings/        # Weddings Albums Manager (DND sorting)
-│   │   │   ├── commercial/      # Commercial Campaigns Manager
-│   │   │   ├── products/        # 3D Inventory Table (Price/Stock Toggles)
-│   │   │   ├── inbox/           # Client Inquiries & Leads Center
-│   │   │   └── content/         # Dynamic Site Content & WhatsApp Settings
-│   │   ├── api/                 # API Routes (/upload, /messages, /revalidate)
-│   │   ├── layout.tsx           # Global Root Layout & Schema.org JSON-LD
-│   │   ├── sitemap.ts           # Dynamic SEO Sitemap
-│   │   └── robots.ts            # Search Crawler Directives
-│   ├── components/
-│   │   ├── 3d-platform/         # 3D Viewer, MarketplaceGrid, CustomPrintSection
-│   │   ├── admin/               # MediaUploader, StatusDropdown, PhotoProjectTable
-│   │   ├── seo/                 # Schema.org JSON-LD Injector
-│   │   ├── Navbar.tsx           # Kinetic liquid-glass navigation & mobile drawer
-│   │   └── GoldenCursorTrail.tsx# 60fps HTML5 Canvas golden stardust trail
-│   ├── context/                 # Language & i18n state provider
-│   └── lib/                     # Supabase clients, Zod validations, CRM helpers
-├── supabase/                    # Production SQL migrations & seed scripts
-├── Dockerfile                   # Production multi-stage standalone Dockerfile
-└── next.config.ts               # Security headers, CSP & standalone output
+│ ├── app/
+│ │ ├── (public)/ # Public front-end portfolio routes
+│ │ │ ├── page.tsx # Home: Living Video Split Hero & WhatsApp Contact
+│ │ │ ├── weddings/ # Med Art Luxury Weddings Gallery
+│ │ │ ├── production/ # Terkina Commercial & Events Gallery
+│ │ │ └── 3d/ # 3D Engineering Lab & Physical Marketplace
+│ │ ├── admin/ # Master CRM Control Center
+│ │ │ ├── page.tsx # Real-time KPIs & Activity Overview
+│ │ │ ├── weddings/ # Weddings Albums Manager (DND sorting)
+│ │ │ ├── commercial/ # Commercial Campaigns Manager
+│ │ │ ├── products/ # 3D Inventory Table (Price/Stock Toggles)
+│ │ │ ├── inbox/ # Client Inquiries & Leads Center
+│ │ │ └── content/ # Dynamic Site Content & WhatsApp Settings
+│ │ ├── api/ # API Routes (/upload, /messages, /revalidate)
+│ │ ├── layout.tsx # Global Root Layout & Schema.org JSON-LD
+│ │ ├── sitemap.ts # Dynamic SEO Sitemap
+│ │ └── robots.ts # Search Crawler Directives
+│ ├── components/
+│ │ ├── 3d-platform/ # 3D Viewer, MarketplaceGrid, CustomPrintSection
+│ │ ├── admin/ # MediaUploader, StatusDropdown, PhotoProjectTable
+│ │ ├── seo/ # Schema.org JSON-LD Injector
+│ │ ├── Navbar.tsx # Kinetic liquid-glass navigation & mobile drawer
+│ │ └── GoldenCursorTrail.tsx# 60fps HTML5 Canvas golden stardust trail
+│ ├── context/ # Language & i18n state provider
+│ └── lib/ # Supabase clients, Zod validations, CRM helpers
+├── supabase/ # Production SQL migrations & seed scripts
+├── Dockerfile # Production multi-stage standalone Dockerfile
+└── next.config.ts # Security headers, CSP & standalone output
 
 🤝 Contributing
 
@@ -256,6 +211,7 @@ Contributions are welcome! If you'd like to improve the codebase, add new WebGL 
 📄 License
 
 Distributed under the MIT License. See LICENSE for more details.
+
 <p align="center">
 Crafted with precision for <strong>TERKINA & MED ART STUDIOS</strong>.
 </p>
